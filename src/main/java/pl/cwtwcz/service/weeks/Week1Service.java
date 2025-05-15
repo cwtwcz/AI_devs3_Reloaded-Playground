@@ -1,6 +1,5 @@
 package pl.cwtwcz.service.weeks;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -10,8 +9,6 @@ import pl.cwtwcz.service.ApiExplorerService;
 import pl.cwtwcz.service.FlagService;
 import pl.cwtwcz.service.PageExplorerService;
 import pl.cwtwcz.service.PromptService;
-
-import java.io.IOException;
 
 @Service
 public class Week1Service {
@@ -42,7 +39,7 @@ public class Week1Service {
         String prompt = promptService.w01d01_createYearExtractionPrompt(question);
         logger.info("Prompt to extract year: {}", prompt);
         
-        String llmAnswer = llmAdapter.getChatCompletion(prompt);
+        String llmAnswer = llmAdapter.getAnswer(prompt);
         logger.info("Answer from LLM: {}", llmAnswer);
 
         String secretPageUrl = pageExplorerService.loginToRobots(llmAnswer);
@@ -78,7 +75,7 @@ public class Week1Service {
                 String promptForLlm = promptService.w01d02_createVerificationTaskPrompt(questionFromTheRobot);
                 logger.debug("Generated prompt for LLM: {}", promptForLlm);
 
-                String llmAnswer = llmAdapter.getChatCompletion(promptForLlm);
+                String llmAnswer = llmAdapter.getAnswer(promptForLlm);
                 logger.info("LLM Answer: {}", llmAnswer);
 
                 if (llmAnswer == null || llmAnswer.startsWith("Error:")) {
