@@ -2,53 +2,42 @@ package pl.cwtwcz.service.weeks;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
 import pl.cwtwcz.adapter.LlmAdapter;
+import pl.cwtwcz.dto.week1.day2.VerifyRequestDto;
 import pl.cwtwcz.dto.week1.day2.VerifyResponseDto;
 import pl.cwtwcz.service.ApiExplorerService;
 import pl.cwtwcz.service.FlagService;
-import pl.cwtwcz.service.PageExplorerService;
 import pl.cwtwcz.service.PromptService;
 
-@Service
-public class Week1Service {
+import java.util.Optional;
 
-    private static final Logger logger = LoggerFactory.getLogger(Week1Service.class);
-    private final PageExplorerService pageExplorerService;
+@Service
+public class W01D02Service {
+    private static final Logger logger = LoggerFactory.getLogger(W01D02Service.class);
+
     private final LlmAdapter llmAdapter;
     private final PromptService promptService;
     private final FlagService flagService;
     private final ApiExplorerService apiExplorerService;
+    private final String xyzBaseUrl;
 
-    public Week1Service(PageExplorerService pageExplorerService, 
-                       LlmAdapter llmAdapter, 
-                       PromptService promptService, 
-                       FlagService flagService,
-                       ApiExplorerService apiExplorerService) {
-        this.pageExplorerService = pageExplorerService;
+    public W01D02Service(
+            LlmAdapter llmAdapter,
+            PromptService promptService,
+            FlagService flagService,
+            ApiExplorerService apiExplorerService,
+            @Value("${xyz.base.url}") String xyzBaseUrl) {
         this.llmAdapter = llmAdapter;
         this.promptService = promptService;
         this.flagService = flagService;
         this.apiExplorerService = apiExplorerService;
+        this.xyzBaseUrl = xyzBaseUrl;
     }
 
-    public String w01d01() {
-        String question = pageExplorerService.getQuestionFromLoginPage();
-        logger.info("Question from Page: {}", question);
-        
-        String prompt = promptService.w01d01_createYearExtractionPrompt(question);
-        logger.info("Prompt to extract year: {}", prompt);
-        
-        String llmAnswer = llmAdapter.getAnswer(prompt);
-        logger.info("Answer from LLM: {}", llmAnswer);
-
-        String secretPageUrl = pageExplorerService.loginToRobots(llmAnswer);
-        logger.info("URL of secret page: {}", secretPageUrl);
-
-        return secretPageUrl;
-    }
-
-    public void w01d02() {
+    public String execute() {
         String currentMsgId = "0";
         String textToSend = "READY";
         int maxAttempts = 10;
@@ -56,19 +45,18 @@ public class Week1Service {
         logger.info("Starting conversation with the robot.");
         for (int attempt = 0; attempt < maxAttempts; attempt++) {
             try {
-                VerifyResponseDto verifyResponse = apiExplorerService.w01d02verifyCall(textToSend, currentMsgId);
-                
-                if (verifyResponse == null) {
-                    logger.warn("Failed to get valid response from API. Ending process.");
-                    break;
-                }
+                VerifyRequestDto requestDto = new VerifyRequestDto(textToSend, currentMsgId);
+                VerifyResponseDto verifyResponse = apiExplorerService.postJsonForObject(xyzBaseUrl + "verify",
+                        requestDto,
+                        VerifyResponseDto.class);
 
                 currentMsgId = verifyResponse.getMsgID();
                 String questionFromTheRobot = verifyResponse.getText();
 
-                if (flagService.checkIfFlagInText(questionFromTheRobot)) {
+                Optional<String> flag = flagService.findFlagInText(questionFromTheRobot);
+                if (flag.isPresent()) {
                     logger.info("Flag detected in robot question. Verification process complete.");
-                    break;
+                    return flag.get();
                 }
                 logger.info("Robot question (msgID: {}): {}", currentMsgId, questionFromTheRobot);
 
@@ -82,7 +70,7 @@ public class Week1Service {
                     logger.error("LLM returned an error or null: {}. Aborting.", llmAnswer);
                     break;
                 }
-                
+
                 textToSend = llmAnswer.trim();
 
                 if (attempt == maxAttempts - 1) {
@@ -95,9 +83,6 @@ public class Week1Service {
             }
         }
         logger.info("Ending w01d02 verification process.");
+        return "Flag not found";
     }
-
-    public void w01d03() {
-        // TODO: Implement w01d03
-    }
-}
+} 

@@ -5,27 +5,40 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import pl.cwtwcz.service.weeks.Week1Service;
+import pl.cwtwcz.service.weeks.W01D01Service;
+import pl.cwtwcz.service.weeks.W01D02Service;
+import pl.cwtwcz.service.weeks.W01D03Service;
 
 @RestController
 @RequestMapping("/week1")
 public class Week1RestController {
 
-    private final Week1Service week1Service;
+    private final W01D01Service w01d01Service;
+    private final W01D02Service w01d02Service;
+    private final W01D03Service w01d03Service;
 
     @Autowired
-    public Week1RestController(Week1Service week1Service) {
-        this.week1Service = week1Service;
+    public Week1RestController(
+            W01D01Service w01d01Service,
+            W01D02Service w01d02Service,
+            W01D03Service w01d03Service) {
+        this.w01d01Service = w01d01Service;
+        this.w01d02Service = w01d02Service;
+        this.w01d03Service = w01d03Service;
     }
 
     @GetMapping("/w01d01")
     public String w01d01() {
-        return week1Service.w01d01();
+        return w01d01Service.execute();
     }
 
     @GetMapping("/w01d02")
-    public void w01d02() {
-        week1Service.w01d02();
+    public String w01d02() {
+        return w01d02Service.execute();
     }
 
-} 
+    @GetMapping("/w01d03")
+    public String w01d03() {
+        return w01d03Service.execute();
+    }
+}

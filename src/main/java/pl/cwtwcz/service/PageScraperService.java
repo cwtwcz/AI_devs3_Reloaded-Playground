@@ -13,13 +13,14 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
-public class PageExplorerService {
+public class PageScraperService {
 
-    private static final Logger logger = LoggerFactory.getLogger(PageExplorerService.class);
+    private static final Logger logger = LoggerFactory.getLogger(PageScraperService.class);
 
     @Value("${xyz.base.url}")
     private String xyzBaseUrl;
@@ -38,7 +39,7 @@ public class PageExplorerService {
 
     private Pattern URL_PATTERN = Pattern.compile("<a href=\"([^\"]*)\"");
 
-    public PageExplorerService(RestTemplate restTemplate, FlagService flagService) {
+    public PageScraperService(RestTemplate restTemplate, FlagService flagService) {
         this.restTemplate = restTemplate;
         this.flagService = flagService;
     }
@@ -51,7 +52,7 @@ public class PageExplorerService {
                         .matcher(response.getBody());
                 if (pIdMatcher.find()) {
                     String question = pIdMatcher.group(1).trim();
-                    logger.debug("Found question: {}", question);
+                    logger.info("Found question: {}", question);
                     return question;
                 }
             }
@@ -61,7 +62,7 @@ public class PageExplorerService {
         }
     }
 
-    public String loginToRobots(String answer) {
+    public String loginToRobotsAndFindFlag(String answer) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
@@ -73,31 +74,26 @@ public class PageExplorerService {
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(map, headers);
 
         try {
-            logger.debug("Logging into {} with user {}", xyzBaseUrl, robotUsername);
+            logger.info("Logging into {} with user {}", xyzBaseUrl, robotUsername);
             ResponseEntity<String> response = restTemplate.postForEntity(xyzBaseUrl, requestEntity, String.class);
 
-            if (response.getStatusCode().is2xxSuccessful()) {
-                URI location = response.getHeaders().getLocation();
-                if (location != null) {
-                    logger.info("Login successful, redirecting to: {}", location.toString());
-                    return location.toString();
-                }
-                String responseBody = response.getBody();
-                if (responseBody != null) {
-                    flagService.checkIfFlagInText(responseBody);
-
-                    Matcher urlMatcher = URL_PATTERN.matcher(responseBody);
-                    if (urlMatcher.find()) {
-                        String secretPath = urlMatcher.group(1);
-                        if (!secretPath.startsWith("http") && !secretPath.startsWith("#")) {
-                            URI baseUri = URI.create(xyzBaseUrl);
-                            URI resolvedUri = baseUri.resolve(secretPath);
-                            logger.info("Login successful, found link in body: {}", resolvedUri.toString());
-                            return resolvedUri.toString();
-                        }
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                // Check if there is a secret link in the response
+                Matcher urlMatcher = URL_PATTERN.matcher(response.getBody());
+                if (urlMatcher.find()) {
+                    String secretPath = urlMatcher.group(1);
+                    if (!secretPath.startsWith("http") && !secretPath.startsWith("#")) {
+                        URI resolvedUri = URI.create(xyzBaseUrl).resolve(secretPath);
+                        logger.info("[IMPORTANT] Found secret link in body: {}", resolvedUri.toString());
                     }
                 }
-                logger.warn("Login returned 2xx status, but no redirect URL or link in body found.");
+
+                // Check if flag is in response
+                Optional<String> flag = flagService.findFlagInText(response.getBody());
+                if (flag.isPresent()) {
+                    logger.info("[IMPORTANT] Found flag in response body: {}", flag.get());
+                    return flag.get();
+                }
             }
             String errorMessage = String.format("Login failed. Status code: %s. Response: %s",
                     response.getStatusCode(),

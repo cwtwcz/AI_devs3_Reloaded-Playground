@@ -15,9 +15,9 @@ public class PromptService {
      *         year
      */
     public String w01d01_createYearExtractionPrompt(String question) {
-        return "Odpowiedz na poniższe pytanie podając WYŁĄCZNIE rok (liczbę). " +
-                "Nie dodawaj żadnego wstępu, wyjaśnień, kropek, spacji ani innych słów. " +
-                "Odpowiedź ma zawierać tylko cyfry roku. Oto pytanie: " + question;
+        return "Answer the following question by providing ONLY the year (number). " +
+                "Do not add any introduction, explanations, periods, spaces or other words. " +
+                "The answer should contain only the year digits. Here is the question: " + question;
     }
 
     /**
@@ -27,7 +27,7 @@ public class PromptService {
      * otherwise answer truthfully.
      * The answer should be in English and concise.
      *
-     * @param question            The question to answer.
+     * @param question The question to answer.
      * @return A formatted prompt string.
      */
     public String w01d02_createVerificationTaskPrompt(String question) {
@@ -38,5 +38,17 @@ public class PromptService {
                 "If the question is not covered by the provided context, answer truthfully. " +
                 "Provide ONLY the direct answer, in English, without any additional text, explanations, or quotation marks. ";
         return KNOWLEDGE_OVERRIDE + " " + PROMPT_RULES + "Question: " + question;
+    }
+
+    /**
+     * Creates a prompt that instructs LLM to provide a short, concise answer
+     * without additional text or punctuation.
+     *
+     * @param question The original question.
+     * @return Formatted prompt for a short answer.
+     */
+    public String w01d03_createShortAnswerPrompt(String question) {
+        return "Answer the following question. Provide a short, concise answer without any additional text or punctuation marks. Question: "
+                + question;
     }
 }

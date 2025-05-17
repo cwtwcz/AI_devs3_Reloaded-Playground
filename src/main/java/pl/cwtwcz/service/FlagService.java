@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,18 +18,18 @@ public class FlagService {
      * Checks if the response contains a flag and logs it if found
      * 
      * @param content The content to check for flags
-     * @return true if flag is found, false otherwise
+     * @return Optional containing the flag if found, empty otherwise
      */
-    public boolean checkIfFlagInText(String content) {
+    public Optional<String> findFlagInText(String content) {
         if (content == null || content.isEmpty()) {
-            return false;
+            return Optional.empty();
         }
         
         Matcher matcher = FLAG_PATTERN.matcher(content);
         if (matcher.find()) {
             logger.info("[IMPORTANT] Found flag in response body: {}", matcher.group());
-            return true;
+            return Optional.of(matcher.group());
         }
-        return false;
+        return Optional.empty();
     }
 }

@@ -16,40 +16,41 @@ public class ApiExplorerService {
 
     private static final Logger logger = LoggerFactory.getLogger(ApiExplorerService.class);
     private final RestTemplate restTemplate;
-    private final String verifyApiUrl;
 
-    public ApiExplorerService(
-            RestTemplate restTemplate,
-            @Value("${api.verify.url}") String verifyApiUrl) {
+    public ApiExplorerService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
-        this.verifyApiUrl = verifyApiUrl;
     }
 
     /**
-     * Makes a verification call to the API for week 1 day 2 task.
+     * Sends a POST request with a JSON payload to the specified URL and returns the
+     * response.
      *
-     * @param text The text to send in the request
-     * @param msgId The message ID for the request
-     * @return The API response
-     * @throws RuntimeException if there's an error with the API call or response processing
+     * @param url          The URL to send the POST request to.
+     * @param payload      The object to be serialized to JSON and sent as the
+     *                     request body.
+     * @param responseType The class of the expected response body.
+     * @param <T>          The type of the request payload.
+     * @param <R>          The type of the expected response.
+     * @return The API response.
+     * @throws RuntimeException if there's an error with the API call or response
+     *                          processing.
      */
-    public VerifyResponseDto w01d02verifyCall(String text, String msgId) {
-        VerifyRequestDto requestDto = new VerifyRequestDto(text, msgId);
-        
+    public <T, R> R postJsonForObject(String url, T payload, Class<R> responseType) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<VerifyRequestDto> requestEntity = new HttpEntity<>(requestDto, headers);
+        HttpEntity<T> requestEntity = new HttpEntity<>(payload, headers);
 
         try {
-            VerifyResponseDto response = restTemplate.postForObject(verifyApiUrl, requestEntity, VerifyResponseDto.class);
+            R response = restTemplate.postForObject(url, requestEntity, responseType);
             if (response == null) {
-                logger.warn("Received null response from API.");
-                throw new RuntimeException("Received null response from API.");
+                logger.warn("Received null response from API for URL: {}", url);
+                throw new RuntimeException("Received null response from API for URL: " + url);
             }
             return response;
         } catch (Exception e) {
-            logger.error("Error during API call: {}", e.getMessage(), e);
-            throw new RuntimeException("Error during API call: " + e.getMessage());
+            logger.error("Error during POST API call to {}: {}", url, e.getMessage(), e);
+            throw new RuntimeException("Error during POST API call to " + url + ": " + e.getMessage());
         }
     }
-} 
+
+}
