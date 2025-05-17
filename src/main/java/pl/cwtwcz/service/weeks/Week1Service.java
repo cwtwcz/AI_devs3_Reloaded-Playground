@@ -73,7 +73,7 @@ public class Week1Service {
                 logger.info("Robot question (msgID: {}): {}", currentMsgId, questionFromTheRobot);
 
                 String promptForLlm = promptService.w01d02_createVerificationTaskPrompt(questionFromTheRobot);
-                logger.debug("Generated prompt for LLM: {}", promptForLlm);
+                logger.info("Generated prompt for LLM: {}", promptForLlm);
 
                 String llmAnswer = llmAdapter.getAnswer(promptForLlm);
                 logger.info("LLM Answer: {}", llmAnswer);
@@ -95,5 +95,9 @@ public class Week1Service {
             }
         }
         logger.info("Ending w01d02 verification process.");
+    }
+
+    public void w01d03() {
+
     }
 }
