@@ -55,7 +55,7 @@ public class W01D03Service {
         this.reportUrl = reportUrl;
     }
 
-    public String execute() {
+    public String w01d03() {
         logger.info("Starting w01d03 task.");
 
         // Step 1: Read input data from file
@@ -120,4 +120,4 @@ public class W01D03Service {
             throw new RuntimeException("Invalid number format in expression: " + expression, e);
         }
     }
-} 
+}

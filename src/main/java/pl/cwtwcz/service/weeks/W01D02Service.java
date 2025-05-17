@@ -37,7 +37,7 @@ public class W01D02Service {
         this.xyzBaseUrl = xyzBaseUrl;
     }
 
-    public String execute() {
+    public String w01d02() {
         String currentMsgId = "0";
         String textToSend = "READY";
         int maxAttempts = 10;
@@ -85,4 +85,4 @@ public class W01D02Service {
         logger.info("Ending w01d02 verification process.");
         return "Flag not found";
     }
-} 
+}

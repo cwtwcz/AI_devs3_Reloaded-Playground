@@ -25,7 +25,7 @@ public class W01D01Service {
         this.promptService = promptService;
     }
 
-    public String execute() {
+    public String w01d01() {
         String question = pageExplorerService.getQuestionFromLoginPage();
         logger.info("Question from Page: {}", question);
 

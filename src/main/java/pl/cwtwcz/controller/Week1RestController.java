@@ -29,16 +29,16 @@ public class Week1RestController {
 
     @GetMapping("/w01d01")
     public String w01d01() {
-        return w01d01Service.execute();
+        return w01d01Service.w01d01();
     }
 
     @GetMapping("/w01d02")
     public String w01d02() {
-        return w01d02Service.execute();
+        return w01d02Service.w01d02();
     }
 
     @GetMapping("/w01d03")
     public String w01d03() {
-        return w01d03Service.execute();
+        return w01d03Service.w01d03();
     }
 }
