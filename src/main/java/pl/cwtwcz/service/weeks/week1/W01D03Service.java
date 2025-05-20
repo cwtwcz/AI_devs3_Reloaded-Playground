@@ -1,4 +1,4 @@
-package pl.cwtwcz.service.weeks;
+package pl.cwtwcz.service.weeks.week1;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
