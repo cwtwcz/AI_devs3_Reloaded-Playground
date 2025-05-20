@@ -65,4 +65,20 @@ public class PromptService {
                "Personal data types: first and last name together (e.g., 'Paweł Zieliński' -> 'CENZURA'), age, city, street and house number together (e.g., 'ul. Szeroka 21/5' -> 'ul. CENZURA'). " +
                "Keep the original text format (dots, commas, spaces). Don't change the text. Text: " + text;
     }
+
+    /**
+     * Creates a prompt for finding the street name of the institute where professor Andrzej Maj teaches.
+     * The answer should be ONLY the street name, nothing else. 
+     * In polish to match the context.
+     *
+     * @param fullContext The full context text to search in.
+     * @return Formatted prompt for the LLM.
+     */
+    public String w02d01_createStreetNamePrompt(String fullContext) {
+        return"Odpowiedz na następujące pytanie. Podaj nazwę ulicy na znajdował się dokładny instytut, w którym pracował Andrzej Maj. "
+         + "W odpowiedzi podaj tylko nazwę ulicy, bez komentarza i znaków interpunkcyjnych. "
+         + "Dokładnie postaraj się zrozumieć tekst i wychwycić w jakim instytucie Andrzej Maj pracował. "
+         + "Następnie, na podstawie swojej wiedzy określ przy jakiej ulicy znajduje się ten dokładny instytut podanej uczelni. "
+         + "<text>" + fullContext + "</text>";
+    }
 }

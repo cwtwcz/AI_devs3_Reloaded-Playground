@@ -8,6 +8,7 @@ import com.theokanning.openai.service.OpenAiService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import static com.theokanning.openai.completion.chat.ChatMessageRole.USER;
@@ -17,6 +18,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Service
+@Primary
 public class OpenAiAdapter implements LlmAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(OpenAiAdapter.class);
@@ -25,7 +27,7 @@ public class OpenAiAdapter implements LlmAdapter {
     private final String defaultModel;
 
     public OpenAiAdapter(@Value("${openai.api.key}") String apiKey,
-            @Value("${openai.model.name:gpt-3.5-turbo}") String defaultModel,
+            @Value("${openai.model.name:gpt-4.1-mini}") String defaultModel,
             @Value("${openai.timeout:60}") Integer timeoutSeconds) {
         if (apiKey == null || apiKey.isEmpty()) {
             logger.error("OpenAI API key is not configured. Check application properties.");
@@ -39,17 +41,27 @@ public class OpenAiAdapter implements LlmAdapter {
 
     @Override
     public String getAnswer(String prompt) {
+        return getAnswer(prompt, defaultModel);
+    }
+
+    public String getAnswer(String prompt, String modelName) {
+
         if (prompt == null || prompt.isEmpty()) {
             logger.warn("Prompt for OpenAI is empty.");
             throw new IllegalArgumentException("Error: Prompt is empty.");
         }
 
-        logger.info("Sending prompt to OpenAI API (model: {}): \"{}\"", defaultModel, prompt);
+        logger.info("Sending prompt to OpenAI API (model: {}): \"{}\"", modelName, prompt);
 
         try {
             ChatMessage userMessage = new ChatMessage(USER.value(), prompt);
 
-            List<ChatCompletionChoice> choices = openAiService.createChatCompletion(getRequest(userMessage))
+            ChatCompletionRequest request = ChatCompletionRequest.builder()
+                    .model(modelName)
+                    .messages(Collections.singletonList(userMessage))
+                    .build();
+
+            List<ChatCompletionChoice> choices = openAiService.createChatCompletion(request)
                     .getChoices();
 
             if (choices != null && !choices.isEmpty() && choices.get(0).getMessage() != null) {
@@ -69,11 +81,8 @@ public class OpenAiAdapter implements LlmAdapter {
         }
     }
 
-    private ChatCompletionRequest getRequest(ChatMessage userMessage) {
-        ChatCompletionRequest request = ChatCompletionRequest.builder()
-                .model(defaultModel)
-                .messages(Collections.singletonList(userMessage))
-                .build();
-        return request;
+    @Override
+    public String speechToText(String audioFilePath) {
+        throw new UnsupportedOperationException("Speech-to-text is not yet implemented for OpenAI adapter.");
     }
 }
