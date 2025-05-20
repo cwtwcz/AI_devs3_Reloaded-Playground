@@ -35,6 +35,8 @@ public class ApiExplorerService {
     public <T, R> R postJsonForObject(String url, T payload, Class<R> responseType) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set(HttpHeaders.CONTENT_ENCODING, "UTF-8");
+        headers.set(HttpHeaders.ACCEPT_CHARSET, "UTF-8");
         HttpEntity<T> requestEntity = new HttpEntity<>(payload, headers);
 
         try {

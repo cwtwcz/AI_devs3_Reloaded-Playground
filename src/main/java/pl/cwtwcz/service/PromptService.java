@@ -51,4 +51,18 @@ public class PromptService {
         return "Answer the following question. Provide a short, concise answer without any additional text or punctuation marks. Question: "
                 + question;
     }
+
+    /**
+     * Creates a prompt that instructs LLM to censor all personal data in the text by replacing them with the word "CENZURA".
+     * Personal data types: first and last name, age, city, street and house number together (e.g., "ul. Szeroka 21/5" -> "ul. CENZURA").
+     * Keep the original text format (dots, commas, spaces). Don't change the text.
+     *
+     * @param text The original text containing personal data.
+     * @return Formatted prompt for censoring personal data.
+     */
+    public String w01d05_createCensorPrompt(String text) {
+        return "Censor all personal data in the following text by replacing them with the word \"CENZURA\". " +
+               "Personal data types: first and last name together (e.g., 'Paweł Zieliński' -> 'CENZURA'), age, city, street and house number together (e.g., 'ul. Szeroka 21/5' -> 'ul. CENZURA'). " +
+               "Keep the original text format (dots, commas, spaces). Don't change the text. Text: " + text;
+    }
 }
