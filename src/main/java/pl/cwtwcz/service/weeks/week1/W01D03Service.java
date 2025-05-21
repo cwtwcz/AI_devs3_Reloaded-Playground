@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import pl.cwtwcz.adapter.LlmAdapter;
+import pl.cwtwcz.adapter.OpenAiAdapter;
 import pl.cwtwcz.dto.week1.day3.AnswerDataRequestDto;
 import pl.cwtwcz.dto.week1.day3.InputDataDto;
 import pl.cwtwcz.dto.week1.day3.AnswerDto;
@@ -22,38 +22,28 @@ import static pl.cwtwcz.utils.StringUtils.isNotEmpty;
 
 import java.util.List;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 @Service
 public class W01D03Service {
+
     private static final Logger logger = LoggerFactory.getLogger(W01D03Service.class);
 
-    private final LlmAdapter llmAdapter;
+    @Value("${aidevs.api.key}")
+    private String aidevsApiKey;
+
+    @Value("${custom.w01d03.input-file.path}")
+    private String w01d03InputFilePath;
+
+    @Value("${custom.report.url}")
+    private String reportUrl;
+
+    private final OpenAiAdapter llmAdapter;
     private final PromptService promptService;
     private final FlagService flagService;
     private final ApiExplorerService apiExplorerService;
     private final FileService fileService;
-    private final String aidevsApiKey;
-    private final String w01d03InputFilePath;
-    private final String reportUrl;
-
-    public W01D03Service(
-            LlmAdapter llmAdapter,
-            PromptService promptService,
-            FlagService flagService,
-            ApiExplorerService apiExplorerService,
-            FileService fileService,
-            @Value("${aidevs.api.key}") String aidevsApiKey,
-            @Value("${custom.w01d03.input-file.path}") String w01d03InputFilePath,
-            @Value("${custom.report.url}") String reportUrl) {
-        this.llmAdapter = llmAdapter;
-        this.promptService = promptService;
-        this.flagService = flagService;
-        this.apiExplorerService = apiExplorerService;
-        this.fileService = fileService;
-        this.aidevsApiKey = aidevsApiKey;
-        this.w01d03InputFilePath = w01d03InputFilePath;
-        this.reportUrl = reportUrl;
-    }
 
     public String w01d03() {
         logger.info("Starting w01d03 task.");

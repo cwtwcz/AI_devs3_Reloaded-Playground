@@ -12,43 +12,37 @@ import pl.cwtwcz.dto.common.OpenAiVisionResponseDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.*;
 
 import static com.theokanning.openai.completion.chat.ChatMessageRole.USER;
 
-import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 @Service
-@Primary
-public class OpenAiAdapter implements LlmAdapter {
+public class OpenAiAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(OpenAiAdapter.class);
 
+    @Value("${openai.model.name}")
+    private String defaultModel;
+
+    @Value("${openai.api.key}")
+    private String apiKey;
+
+    @Value("${openai.chat.completions.url}")
+    private String openAiChatCompletionsUrl;
+
+    @Value("${openai.image.url}")
+    private String openAiImageUrl;
+
     private final OpenAiService openAiService;
-    private final String defaultModel;
     private final RestTemplate restTemplate;
-    private final String apiKey;
-    private final String openAiChatCompletionsUrl;
 
-    public OpenAiAdapter(
-            @Value("${openai.api.key}") String apiKey,
-            @Value("${openai.model.name}") String defaultModel,
-            @Value("${openai.timeout}") Integer timeoutSeconds,
-            @Value("${openai.chat.completions.url") String openAiChatCompletionsUrl,
-            RestTemplate restTemplate) {
-        this.apiKey = apiKey;
-        this.defaultModel = defaultModel;
-        this.openAiService = new OpenAiService(apiKey, Duration.ofSeconds(timeoutSeconds));
-        this.restTemplate = restTemplate;
-        this.openAiChatCompletionsUrl = openAiChatCompletionsUrl;
-    }
-
-    @Override
     public String getAnswer(String prompt) {
         return getAnswer(prompt, defaultModel);
     }
@@ -90,13 +84,7 @@ public class OpenAiAdapter implements LlmAdapter {
         }
     }
 
-    @Override
-    public String speechToText(String audioFilePath) {
-        throw new UnsupportedOperationException("Speech-to-text is not yet implemented for OpenAI adapter.");
-    }
-
-    @Override
-    public String getAnswerWithImage(OpenAiImagePromptRequestDto requestDto, String modelName) {
+    public String getAnswerWithImageRequestPayload(OpenAiImagePromptRequestDto requestDto, String modelName) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -106,8 +94,8 @@ public class OpenAiAdapter implements LlmAdapter {
 
             HttpEntity<OpenAiImagePromptRequestDto> entity = new HttpEntity<>(requestDto, headers);
 
-            String url = openAiChatCompletionsUrl;
-            ResponseEntity<OpenAiVisionResponseDto> response = restTemplate.postForEntity(url, entity, OpenAiVisionResponseDto.class);
+            ResponseEntity<OpenAiVisionResponseDto> response = restTemplate.postForEntity(
+                    openAiChatCompletionsUrl, entity, OpenAiVisionResponseDto.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 OpenAiVisionResponseDto.Message message = response.getBody().getChoices().get(0).getMessage();
@@ -116,12 +104,34 @@ public class OpenAiAdapter implements LlmAdapter {
                     logger.info("Received vision response from OpenAI: {}", content);
                     return content.trim();
                 }
-            } 
+            }
             logger.error("OpenAI vision API call failed: {}", response.getBody());
-            return "Error: Communication issues with LLM (vision, HTTP: " + response.getStatusCodeValue() + ")";
+            return "Error: Communication issues with LLM (vision, HTTP: " + response.getStatusCode() + ")";
         } catch (Exception e) {
             logger.error("Error during OpenAI vision API call: {}", e.getMessage(), e);
             return "Error: Internal problem while querying LLM (vision).";
+        }
+    }
+
+    public pl.cwtwcz.dto.common.DallEImageResponseDto generateImage(String prompt, String modelName) {
+        pl.cwtwcz.dto.common.DallEImageRequestDto requestDto = new pl.cwtwcz.dto.common.DallEImageRequestDto(modelName,
+                prompt);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(apiKey);
+        HttpEntity<pl.cwtwcz.dto.common.DallEImageRequestDto> entity = new HttpEntity<>(requestDto, headers);
+        try {
+            ResponseEntity<pl.cwtwcz.dto.common.DallEImageResponseDto> response = restTemplate.postForEntity(
+                    openAiImageUrl, entity, pl.cwtwcz.dto.common.DallEImageResponseDto.class);
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                return response.getBody();
+            } else {
+                logger.error("OpenAI image API call failed: {}", response.getBody());
+                throw new RuntimeException("OpenAI image API call failed: " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            logger.error("Error during OpenAI image API call: {}", e.getMessage(), e);
+            throw new RuntimeException("Error during OpenAI image API call: " + e.getMessage(), e);
         }
     }
 }

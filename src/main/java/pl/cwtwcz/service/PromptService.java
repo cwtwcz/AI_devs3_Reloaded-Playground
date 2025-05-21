@@ -90,18 +90,46 @@ public class PromptService {
      */
     public String w02d02_createCityRecognitionPrompt() {
         return """
-Na załączonym obrazie znajdują się cztery fragmenty mapy, oznaczone jako Fragment 1, Fragment 2, Fragment 3 i Fragment 4. Trzy z fragmentów pochodzą z tego samego polskiego miasta, które poszukujemy. Jeden z fragmentów jest z innego, niepasującego miasta.
-
-Twoje zadanie to odnaleźć miasta, z których pochodzą te fragmenty map. Wszystkie miasta są w Polsce. Fragmenty map są zgodne z rzeczywistością.
+Twoje zadanie to odnaleźć nazwy miast, z których pochodzą te fragmenty map. Wszystkie miasta są w Polsce. Fragmenty map są zgodne z rzeczywistością. Trzy z fragmentów pochodzą z tego samego polskiego miasta, które poszukujemy.
 
 Dla każdego z fragmentów:
 1. Wypisz charakterystyczne punkty orientacyjne (np. biznesy z nazwą własną, nazwy parków, ulice). UWAGA: BARDZO DOKŁADNIE I PRECYZYJNIE odczytuj nazwy ulic, aby nie odczytać z literówką.
-2. Fragment, po fragmencie: Wytypuj miasta w których są WSZYSTKIE wypisane ulice oraz punkty orientacyjne. Dla każdego z miast wypisz nazwy ulic oraz KODY POCZTOWE, tychże ulic w wytypowanych miastach - na podstawie swojej wiedzy. 
-Rzeczywiste kody pocztowe tych ulic mają pochodzić z Twojej bazy wiedzy.
-3. Na podstawie tych informacji, podaj trzy najbardziej prawdopodobne miasta, z których może pochodzić dany fragment mapy. Jeżeli jesteś pewny jednego miasta, wymień tylko jedno. Nie próbuj zgadywać miast. Uwzględnij, że mogłeś źle odczytać nazwę ulicy.
+2. Wytypuj polskie miasta w których występują WSZYSTKIE wypisane ulice oraz punkty orientacyjne. Dla każdego z miast wypisz NAZWY ULIC oraz KODY POCZTOWE w wytypowanych miastach (na podstawie swojej bazy wiedzy).
+3. Na podstawie tych informacji, podaj trzy najbardziej prawdopodobne rzeczywiste polskie miasta, z których może pochodzić dany fragment mapy. Jeżeli jesteś pewny jednego miasta, wymień tylko jedno. Nie próbuj zgadywać miast. Uwzględnij, że mogłeś źle odczytać nazwę ulicy.
 4. Nie ma na mapie fikcyjnych ulic, albo punktów.
 PS: TAK ISTNIEJE ULICA "KALINKOWA"
+
+<zasady>
+1. Każda z ulic na mapie musi występować w wytypowanych miastach.
+2. Nazwy własne punktów orientacyjnych muszą znajdować się w wytypowanych miastach.
+3. Podaj Polskie rzeczywiste miasta, z których mogą pochodzić te fragmenty map.
+4. Podaj kody pocztowe wytypowanych miast ze swojej bazy wiedzy.
+</zasady>
                 """;
+    }
+
+    /**
+     * Creates a prompt that instructs LLM to provide a short, concise answer
+     * without additional text or punctuation for W02D03.
+     *
+     * @param question The original question.
+     * @return Formatted prompt for a short answer.
+     */
+    public String w02d03_createShortAnswerPrompt(String question) {
+        return "Answer the following question. Provide a short, concise answer without any additional text or punctuation marks. Question: "
+                + question;
+    }
+
+    /**
+     * Creates a prompt for generating an image of a robot based only on its description for W02D03.
+     *
+     * @param robotDescription The textual description of the robot.
+     * @return Formatted prompt for image generation.
+     */
+    public String w02d03_createImagePromptForRobotDescription(String robotDescription) {
+        return "Wygeneruj prompt do wygenerowania grafiki z robotem.\n" +
+                "Skup się tylko i wyłącznie na opisie robota. Pomiń inne postacie.\n" +
+                "Oto opis słowny robota: " + robotDescription;
     }
 
     public String sumarizeResponse(String fullAnswer) {

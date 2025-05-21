@@ -4,26 +4,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import pl.cwtwcz.adapter.LlmAdapter;
+import pl.cwtwcz.adapter.OpenAiAdapter;
 import pl.cwtwcz.service.PageScraperService;
 import pl.cwtwcz.service.PromptService;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 @Service
 public class W01D01Service {
+
     private static final Logger logger = LoggerFactory.getLogger(W01D01Service.class);
 
     private final PageScraperService pageExplorerService;
-    private final LlmAdapter llmAdapter;
+    private final OpenAiAdapter llmAdapter;
     private final PromptService promptService;
-
-    public W01D01Service(
-            PageScraperService pageExplorerService,
-            LlmAdapter llmAdapter,
-            PromptService promptService) {
-        this.pageExplorerService = pageExplorerService;
-        this.llmAdapter = llmAdapter;
-        this.promptService = promptService;
-    }
 
     public String w01d01() {
         String question = pageExplorerService.getQuestionFromLoginPage();
@@ -37,4 +31,4 @@ public class W01D01Service {
 
         return pageExplorerService.loginToRobotsAndFindFlag(llmAnswer);
     }
-} 
+}

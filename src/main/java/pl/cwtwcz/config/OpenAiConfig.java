@@ -13,7 +13,7 @@ public class OpenAiConfig {
     @Value("${openai.api.key}")
     private String apiKey;
 
-    @Value("${openai.timeout:60}")
+    @Value("${openai.timeout}")
     private Integer timeoutSeconds;
 
     @Bean

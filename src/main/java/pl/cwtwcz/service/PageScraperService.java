@@ -16,31 +16,26 @@ import java.net.URI;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 @Service
 public class PageScraperService {
 
     private static final Logger logger = LoggerFactory.getLogger(PageScraperService.class);
 
-    private final String xyzBaseUrl;
-    private final String robotUsername;
-    private final String robotPassword;
+    @Value("${xyz.base.url}")
+    private String xyzBaseUrl;
+
+    @Value("${robot.login.username}")
+    private String robotUsername;
+
+    @Value("${robot.login.password}")
+    private String robotPassword;
+
     private final RestTemplate restTemplate;
     private final FlagService flagService;
     private final Pattern URL_PATTERN = Pattern.compile("<a href=\"([^\"]*)\"");
-
-    public PageScraperService(
-            RestTemplate restTemplate,
-            FlagService flagService,
-            @Value("${xyz.base.url}") String xyzBaseUrl,
-            @Value("${robot.login.username}") String robotUsername,
-            @Value("${robot.login.password}") String robotPassword) {
-        this.restTemplate = restTemplate;
-        this.flagService = flagService;
-        this.xyzBaseUrl = xyzBaseUrl;
-        this.robotUsername = robotUsername;
-        this.robotPassword = robotPassword;
-    }
 
     public String getQuestionFromLoginPage() {
         try {

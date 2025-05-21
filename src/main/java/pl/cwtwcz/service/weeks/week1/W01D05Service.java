@@ -4,35 +4,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import pl.cwtwcz.adapter.LlmAdapter;
+import pl.cwtwcz.adapter.OpenAiAdapter;
 import pl.cwtwcz.dto.common.ReportRequestDto;
 import pl.cwtwcz.service.ApiExplorerService;
 import pl.cwtwcz.service.PromptService;
 import pl.cwtwcz.service.FlagService;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 @Service
 public class W01D05Service {
+
     private static final Logger logger = LoggerFactory.getLogger(W01D05Service.class);
 
-    private final LlmAdapter llmAdapter;
+    @Value("${aidevs.api.key}")
+    private String aidevsApiKey;
+
+    @Value("${custom.report.url}")
+    private String reportUrl;
+
+    private final OpenAiAdapter llmAdapter;
     private final PromptService promptService;
     private final ApiExplorerService apiExplorerService;
     private final FlagService flagService;
-    private final String aidevsApiKey;
-    private final String reportUrl = "https://c3ntrala.ag3nts.org/report";
-
-    public W01D05Service(
-            LlmAdapter llmAdapter,
-            PromptService promptService,
-            ApiExplorerService apiExplorerService,
-            FlagService flagService,
-            @Value("${aidevs.api.key}") String aidevsApiKey) {
-        this.llmAdapter = llmAdapter;
-        this.promptService = promptService;
-        this.apiExplorerService = apiExplorerService;
-        this.flagService = flagService;
-        this.aidevsApiKey = aidevsApiKey;
-    }
 
     public String w01d05() {
         // Step 0: Load text from remote source

@@ -7,16 +7,14 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 @Service
 public class FileService {
 
     private static final Logger logger = LoggerFactory.getLogger(FileService.class);
     private final ObjectMapper objectMapper;
-
-    public FileService(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
 
     /**
      * Reads a JSON file from the specified path and maps it to a Java object.

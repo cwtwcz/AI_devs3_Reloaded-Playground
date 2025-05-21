@@ -7,42 +7,28 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
-import pl.cwtwcz.dto.common.OpenAiImagePromptRequestDto;
+import lombok.RequiredArgsConstructor;
 
 import java.io.File;
 import org.springframework.util.MultiValueMap;
 
+@RequiredArgsConstructor
 @Service
-public class GroqAdapter implements LlmAdapter {
+public class GroqAdapter {
+
     private static final Logger logger = LoggerFactory.getLogger(GroqAdapter.class);
-    private final String apiKey;
-    private final String defaultModelName;
-    private final String transcriptionUrl;
+
+    @Value("${groq.api.key}")
+    private String apiKey;
+
+    @Value("${groq.model.name}")
+    private String defaultModelName;
+
+    @Value("${groq.transcription.url}")
+    private String transcriptionUrl;
+
     private final RestTemplate restTemplate;
 
-    public GroqAdapter(
-            @Value("${groq.api.key}") String apiKey,
-            @Value("${groq.model.name}") String defaultModelName,
-            @Value("${groq.transcription.url}") String transcriptionUrl,
-            RestTemplate restTemplate) {
-        this.apiKey = apiKey;
-        this.defaultModelName = defaultModelName;
-        this.transcriptionUrl = transcriptionUrl;
-        this.restTemplate = restTemplate;
-    }
-
-    @Override
-    public String getAnswer(String prompt) {
-        return getAnswer(prompt, defaultModelName);
-    }
-    
-    @Override
-    public String getAnswer(String prompt, String modelName) {
-        throw new UnsupportedOperationException("Unimplemented method 'getAnswer'");
-    }
-
-    @Override
     public String speechToText(String audioFilePath) {
         try {
             File audioFile = new File(audioFilePath);
@@ -68,7 +54,8 @@ public class GroqAdapter implements LlmAdapter {
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 // The response is expected to be JSON with a 'text' field
                 String responseBody = response.getBody();
-                // Simple extraction of the 'text' field (should use a JSON parser in production)
+                // Simple extraction of the 'text' field (should use a JSON parser in
+                // production)
                 int idx = responseBody.indexOf("\"text\":");
                 if (idx != -1) {
                     int start = responseBody.indexOf('"', idx + 7) + 1;
@@ -87,9 +74,4 @@ public class GroqAdapter implements LlmAdapter {
             throw new RuntimeException("Groq speech-to-text error: " + e.getMessage(), e);
         }
     }
-
-    @Override
-    public String getAnswerWithImage(OpenAiImagePromptRequestDto requestDto, String modelName) {
-        throw new UnsupportedOperationException("Unimplemented method 'getAnswerWithImage'");
-    }
-} 
+}

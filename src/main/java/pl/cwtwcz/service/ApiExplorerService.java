@@ -7,16 +7,14 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 @Service
 public class ApiExplorerService {
 
     private static final Logger logger = LoggerFactory.getLogger(ApiExplorerService.class);
     private final RestTemplate restTemplate;
-
-    public ApiExplorerService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
-    }
 
     /**
      * Sends a POST request with a JSON payload to the specified URL and returns the

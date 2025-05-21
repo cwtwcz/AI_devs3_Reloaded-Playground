@@ -5,36 +5,28 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import pl.cwtwcz.adapter.LlmAdapter;
+import pl.cwtwcz.adapter.OpenAiAdapter;
 import pl.cwtwcz.dto.week1.day2.VerifyTextMsgDto;
 import pl.cwtwcz.service.ApiExplorerService;
 import pl.cwtwcz.service.FlagService;
 import pl.cwtwcz.service.PromptService;
 
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 @Service
 public class W01D02Service {
+
     private static final Logger logger = LoggerFactory.getLogger(W01D02Service.class);
 
-    private final LlmAdapter llmAdapter;
+    @Value("${xyz.base.url}")
+    private String xyzBaseUrl;
+
+    private final OpenAiAdapter llmAdapter;
     private final PromptService promptService;
     private final FlagService flagService;
     private final ApiExplorerService apiExplorerService;
-    private final String xyzBaseUrl;
-
-    public W01D02Service(
-            LlmAdapter llmAdapter,
-            PromptService promptService,
-            FlagService flagService,
-            ApiExplorerService apiExplorerService,
-            @Value("${xyz.base.url}") String xyzBaseUrl) {
-        this.llmAdapter = llmAdapter;
-        this.promptService = promptService;
-        this.flagService = flagService;
-        this.apiExplorerService = apiExplorerService;
-        this.xyzBaseUrl = xyzBaseUrl;
-    }
 
     public String w01d02() {
         String currentMsgId = "0";
