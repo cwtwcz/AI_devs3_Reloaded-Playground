@@ -10,7 +10,7 @@ import pl.cwtwcz.dto.week1.day3.AnswerDataRequestDto;
 import pl.cwtwcz.dto.week1.day3.InputDataDto;
 import pl.cwtwcz.dto.week1.day3.AnswerDto;
 import pl.cwtwcz.dto.week1.day3.ResponseTestDataItemDto;
-import pl.cwtwcz.dto.week1.day3.ResponseTestDetailDto;
+import pl.cwtwcz.dto.common.TestDetailDto;
 import pl.cwtwcz.service.ApiExplorerService;
 import pl.cwtwcz.service.FileService;
 import pl.cwtwcz.service.FlagService;
@@ -67,12 +67,12 @@ public class W01D03Service {
             int calculatedAnswer = evaluateArithmeticSumFromExpression(item.getQuestion());
 
             // Step 2.2: If question is not empty, get answer from LLM
-            ResponseTestDetailDto responseTestDetail = null;
+            TestDetailDto responseTestDetail = null;
             if (item.getTest() != null && isNotEmpty(item.getTest().getQuestion())) {
                 String llmSystemPrompt = promptService.w01d03_createShortAnswerPrompt(item.getTest().getQuestion());
                 String llmAnswer = llmAdapter.getAnswer(llmSystemPrompt);
                 logger.info("LLM Question: {}, LLM Answer: {}", item.getTest().getQuestion(), llmAnswer);
-                responseTestDetail = new ResponseTestDetailDto(item.getTest().getQuestion(), llmAnswer.trim());
+                responseTestDetail = new TestDetailDto(item.getTest().getQuestion(), llmAnswer.trim());
             }
             return new ResponseTestDataItemDto(item.getQuestion(), calculatedAnswer, responseTestDetail);
         }).toList();

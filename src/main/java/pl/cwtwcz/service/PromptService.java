@@ -81,4 +81,30 @@ public class PromptService {
          + "Następnie, na podstawie swojej wiedzy określ przy jakiej ulicy znajduje się ten dokładny instytut podanej uczelni. "
          + "<text>" + fullContext + "</text>";
     }
+
+    /**
+     * Creates a prompt for recognizing the city from a map image with 4 locations, where 1 is from a wrong city.
+     * The answer should be ONLY the city name, nothing else.
+     *
+     * @return Formatted prompt for the LLM.
+     */
+    public String w02d02_createCityRecognitionPrompt() {
+        return """
+Na załączonym obrazie znajdują się cztery fragmenty mapy, oznaczone jako Fragment 1, Fragment 2, Fragment 3 i Fragment 4. Trzy z fragmentów pochodzą z tego samego polskiego miasta, które poszukujemy. Jeden z fragmentów jest z innego, niepasującego miasta.
+
+Twoje zadanie to odnaleźć miasta, z których pochodzą te fragmenty map. Wszystkie miasta są w Polsce. Fragmenty map są zgodne z rzeczywistością.
+
+Dla każdego z fragmentów:
+1. Wypisz charakterystyczne punkty orientacyjne (np. biznesy z nazwą własną, nazwy parków, ulice). UWAGA: BARDZO DOKŁADNIE I PRECYZYJNIE odczytuj nazwy ulic, aby nie odczytać z literówką.
+2. Fragment, po fragmencie: Wytypuj miasta w których są WSZYSTKIE wypisane ulice oraz punkty orientacyjne. Dla każdego z miast wypisz nazwy ulic oraz KODY POCZTOWE, tychże ulic w wytypowanych miastach - na podstawie swojej wiedzy. 
+Rzeczywiste kody pocztowe tych ulic mają pochodzić z Twojej bazy wiedzy.
+3. Na podstawie tych informacji, podaj trzy najbardziej prawdopodobne miasta, z których może pochodzić dany fragment mapy. Jeżeli jesteś pewny jednego miasta, wymień tylko jedno. Nie próbuj zgadywać miast. Uwzględnij, że mogłeś źle odczytać nazwę ulicy.
+4. Nie ma na mapie fikcyjnych ulic, albo punktów.
+PS: TAK ISTNIEJE ULICA "KALINKOWA"
+                """;
+    }
+
+    public String sumarizeResponse(String fullAnswer) {
+        return "Analizując wnioski poniżej, jakie miasta są prawdopodobnie na fragmentach mapy. Odpowiedz zwięźle, w formacie: miasto1, miasto2, miasto3.:\n#######\n" + fullAnswer;
+    }
 }

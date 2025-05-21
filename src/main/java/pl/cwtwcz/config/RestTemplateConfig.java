@@ -14,8 +14,8 @@ public class RestTemplateConfig {
     public RestTemplate restTemplate(RestTemplateBuilder builder) {
         // Można tu ustawić domyślne timeouty, interceptory itp.
         return builder
-                .setConnectTimeout(Duration.ofSeconds(10))
-                .setReadTimeout(Duration.ofSeconds(30))
+                .setConnectTimeout(Duration.ofSeconds(180))
+                .setReadTimeout(Duration.ofSeconds(180))
                 .build();
     }
 } 

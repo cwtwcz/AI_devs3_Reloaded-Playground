@@ -6,8 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import pl.cwtwcz.adapter.LlmAdapter;
-import pl.cwtwcz.dto.week1.day2.VerifyRequestDto;
-import pl.cwtwcz.dto.week1.day2.VerifyResponseDto;
+import pl.cwtwcz.dto.week1.day2.VerifyTextMsgDto;
 import pl.cwtwcz.service.ApiExplorerService;
 import pl.cwtwcz.service.FlagService;
 import pl.cwtwcz.service.PromptService;
@@ -45,10 +44,9 @@ public class W01D02Service {
         logger.info("Starting conversation with the robot.");
         for (int attempt = 0; attempt < maxAttempts; attempt++) {
             try {
-                VerifyRequestDto requestDto = new VerifyRequestDto(textToSend, currentMsgId);
-                VerifyResponseDto verifyResponse = apiExplorerService.postJsonForObject(xyzBaseUrl + "verify",
-                        requestDto,
-                        VerifyResponseDto.class);
+                VerifyTextMsgDto requestDto = new VerifyTextMsgDto(textToSend, currentMsgId);
+                VerifyTextMsgDto verifyResponse = apiExplorerService.postJsonForObject(xyzBaseUrl + "verify",
+                        requestDto, VerifyTextMsgDto.class);
 
                 currentMsgId = verifyResponse.getMsgID();
                 String questionFromTheRobot = verifyResponse.getText();

@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pl.cwtwcz.adapter.LlmAdapter;
-import pl.cwtwcz.dto.week1.day5.ReportRequestDto;
+import pl.cwtwcz.dto.common.ReportRequestDto;
 import pl.cwtwcz.service.ApiExplorerService;
 import pl.cwtwcz.service.PromptService;
 import pl.cwtwcz.service.FlagService;

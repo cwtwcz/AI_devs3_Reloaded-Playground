@@ -5,11 +5,17 @@ import com.theokanning.openai.completion.chat.ChatCompletionChoice;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.service.OpenAiService;
+
+import pl.cwtwcz.dto.common.OpenAiImagePromptRequestDto;
+import pl.cwtwcz.dto.common.OpenAiVisionResponseDto;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.*;
 
 import static com.theokanning.openai.completion.chat.ChatMessageRole.USER;
 
@@ -25,18 +31,21 @@ public class OpenAiAdapter implements LlmAdapter {
 
     private final OpenAiService openAiService;
     private final String defaultModel;
+    private final RestTemplate restTemplate;
+    private final String apiKey;
+    private final String openAiChatCompletionsUrl;
 
-    public OpenAiAdapter(@Value("${openai.api.key}") String apiKey,
-            @Value("${openai.model.name:gpt-4.1-mini}") String defaultModel,
-            @Value("${openai.timeout:60}") Integer timeoutSeconds) {
-        if (apiKey == null || apiKey.isEmpty()) {
-            logger.error("OpenAI API key is not configured. Check application properties.");
-            throw new IllegalStateException("OpenAI API key is not configured.");
-        }
-
+    public OpenAiAdapter(
+            @Value("${openai.api.key}") String apiKey,
+            @Value("${openai.model.name}") String defaultModel,
+            @Value("${openai.timeout}") Integer timeoutSeconds,
+            @Value("${openai.chat.completions.url") String openAiChatCompletionsUrl,
+            RestTemplate restTemplate) {
+        this.apiKey = apiKey;
         this.defaultModel = defaultModel;
         this.openAiService = new OpenAiService(apiKey, Duration.ofSeconds(timeoutSeconds));
-        logger.info("OpenAI adapter initialized with model: {}", defaultModel);
+        this.restTemplate = restTemplate;
+        this.openAiChatCompletionsUrl = openAiChatCompletionsUrl;
     }
 
     @Override
@@ -84,5 +93,35 @@ public class OpenAiAdapter implements LlmAdapter {
     @Override
     public String speechToText(String audioFilePath) {
         throw new UnsupportedOperationException("Speech-to-text is not yet implemented for OpenAI adapter.");
+    }
+
+    @Override
+    public String getAnswerWithImage(OpenAiImagePromptRequestDto requestDto, String modelName) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(apiKey);
+
+            requestDto.setModel(modelName);
+
+            HttpEntity<OpenAiImagePromptRequestDto> entity = new HttpEntity<>(requestDto, headers);
+
+            String url = openAiChatCompletionsUrl;
+            ResponseEntity<OpenAiVisionResponseDto> response = restTemplate.postForEntity(url, entity, OpenAiVisionResponseDto.class);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                OpenAiVisionResponseDto.Message message = response.getBody().getChoices().get(0).getMessage();
+                if (message != null && message.getContent() != null) {
+                    String content = message.getContent();
+                    logger.info("Received vision response from OpenAI: {}", content);
+                    return content.trim();
+                }
+            } 
+            logger.error("OpenAI vision API call failed: {}", response.getBody());
+            return "Error: Communication issues with LLM (vision, HTTP: " + response.getStatusCodeValue() + ")";
+        } catch (Exception e) {
+            logger.error("Error during OpenAI vision API call: {}", e.getMessage(), e);
+            return "Error: Internal problem while querying LLM (vision).";
+        }
     }
 }

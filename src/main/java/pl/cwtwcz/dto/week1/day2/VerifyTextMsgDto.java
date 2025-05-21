@@ -11,7 +11,7 @@ import lombok.ToString;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-public class VerifyRequestDto {
+public class VerifyTextMsgDto {
     private String text;
     private String msgID;
 } 

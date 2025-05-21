@@ -1,4 +1,4 @@
-package pl.cwtwcz.dto.week1.day3;
+package pl.cwtwcz.dto.common;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

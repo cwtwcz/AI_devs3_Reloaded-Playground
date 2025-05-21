@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Qualifier;
 import pl.cwtwcz.adapter.LlmAdapter;
-import pl.cwtwcz.dto.week2.day1.ReportRequestDto;
+import pl.cwtwcz.dto.common.ReportRequestDto;
 import pl.cwtwcz.service.ApiExplorerService;
 import pl.cwtwcz.service.FlagService;
 import pl.cwtwcz.service.PromptService;

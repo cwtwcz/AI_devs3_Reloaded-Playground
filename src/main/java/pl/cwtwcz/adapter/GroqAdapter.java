@@ -7,6 +7,9 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import pl.cwtwcz.dto.common.OpenAiImagePromptRequestDto;
+
 import java.io.File;
 import org.springframework.util.MultiValueMap;
 
@@ -15,14 +18,17 @@ public class GroqAdapter implements LlmAdapter {
     private static final Logger logger = LoggerFactory.getLogger(GroqAdapter.class);
     private final String apiKey;
     private final String defaultModelName;
+    private final String transcriptionUrl;
     private final RestTemplate restTemplate;
-    private final String transcriptionUrl = "https://api.groq.com/openai/v1/audio/transcriptions";
 
-    public GroqAdapter(@Value("${groq.api.key}") String apiKey,
-                       @Value("${groq.model.name}") String defaultModelName,
-                       RestTemplate restTemplate) {
+    public GroqAdapter(
+            @Value("${groq.api.key}") String apiKey,
+            @Value("${groq.model.name}") String defaultModelName,
+            @Value("${groq.transcription.url}") String transcriptionUrl,
+            RestTemplate restTemplate) {
         this.apiKey = apiKey;
         this.defaultModelName = defaultModelName;
+        this.transcriptionUrl = transcriptionUrl;
         this.restTemplate = restTemplate;
     }
 
@@ -33,7 +39,6 @@ public class GroqAdapter implements LlmAdapter {
     
     @Override
     public String getAnswer(String prompt, String modelName) {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getAnswer'");
     }
 
@@ -81,5 +86,10 @@ public class GroqAdapter implements LlmAdapter {
             logger.error("Error during Groq speech-to-text: {}", e.getMessage(), e);
             throw new RuntimeException("Groq speech-to-text error: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public String getAnswerWithImage(OpenAiImagePromptRequestDto requestDto, String modelName) {
+        throw new UnsupportedOperationException("Unimplemented method 'getAnswerWithImage'");
     }
 } 

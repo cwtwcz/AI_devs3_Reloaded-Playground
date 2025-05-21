@@ -22,26 +22,24 @@ public class PageScraperService {
 
     private static final Logger logger = LoggerFactory.getLogger(PageScraperService.class);
 
-    @Value("${xyz.base.url}")
-    private String xyzBaseUrl;
-
-    @Value("${centrala.base.url}")
-    private String centralaBaseUrl;
-
-    @Value("${robot.login.username}")
-    private String robotUsername;
-
-    @Value("${robot.login.password}")
-    private String robotPassword;
-
+    private final String xyzBaseUrl;
+    private final String robotUsername;
+    private final String robotPassword;
     private final RestTemplate restTemplate;
     private final FlagService flagService;
+    private final Pattern URL_PATTERN = Pattern.compile("<a href=\"([^\"]*)\"");
 
-    private Pattern URL_PATTERN = Pattern.compile("<a href=\"([^\"]*)\"");
-
-    public PageScraperService(RestTemplate restTemplate, FlagService flagService) {
+    public PageScraperService(
+            RestTemplate restTemplate,
+            FlagService flagService,
+            @Value("${xyz.base.url}") String xyzBaseUrl,
+            @Value("${robot.login.username}") String robotUsername,
+            @Value("${robot.login.password}") String robotPassword) {
         this.restTemplate = restTemplate;
         this.flagService = flagService;
+        this.xyzBaseUrl = xyzBaseUrl;
+        this.robotUsername = robotUsername;
+        this.robotPassword = robotPassword;
     }
 
     public String getQuestionFromLoginPage() {

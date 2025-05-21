@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import pl.cwtwcz.dto.common.TestDetailDto;
 
 @Data
 @AllArgsConstructor
@@ -13,5 +14,5 @@ import lombok.NoArgsConstructor;
 public class ResponseTestDataItemDto {
     private String question;
     private int answer;
-    private ResponseTestDetailDto test;
+    private TestDetailDto test;
 } 

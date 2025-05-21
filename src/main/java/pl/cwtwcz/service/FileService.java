@@ -42,4 +42,21 @@ public class FileService {
             throw new RuntimeException("Failed to read or parse JSON file " + filePath + ": " + e.getMessage(), e);
         }
     }
+
+    /**
+     * Reads a file from the specified path and returns its contents as a base64-encoded string.
+     *
+     * @param filePath The path to the file.
+     * @return The base64-encoded contents of the file.
+     */
+    public String readFileAsBase64(String filePath) {
+        logger.info("Reading file as base64: {}", filePath);
+        try {
+            java.nio.file.Path path = java.nio.file.Paths.get(filePath);
+            byte[] fileBytes = java.nio.file.Files.readAllBytes(path);
+            return java.util.Base64.getEncoder().encodeToString(fileBytes);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to read file as base64: " + filePath, e);
+        }
+    }
 }
