@@ -1,4 +1,4 @@
-package pl.cwtwcz.dto.week2.day2;
+package pl.cwtwcz.dto.common;
 
 import java.util.List;
 import lombok.Data;
