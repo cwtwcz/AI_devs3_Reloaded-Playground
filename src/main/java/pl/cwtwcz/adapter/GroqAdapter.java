@@ -8,6 +8,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import lombok.RequiredArgsConstructor;
+import pl.cwtwcz.service.PromptService;
 
 import java.io.File;
 import org.springframework.util.MultiValueMap;
@@ -28,8 +29,9 @@ public class GroqAdapter {
     private String transcriptionUrl;
 
     private final RestTemplate restTemplate;
+    private final PromptService promptService;
 
-    public String speechToText(String audioFilePath) {
+    public String speechToText(String audioFilePath, String languageCode) {
         try {
             File audioFile = new File(audioFilePath);
             if (!audioFile.exists()) {
@@ -45,7 +47,8 @@ public class GroqAdapter {
             body.add("model", defaultModelName);
             body.add("temperature", 0);
             body.add("response_format", "verbose_json");
-            body.add("prompt", "Pracujesz w callcenter I zajmujesz się w profesjonalnym spisywaniem zeznań ludzi.");
+            String prompt = promptService.speechToTextPrompt(languageCode);
+            body.add("prompt", prompt);
             body.add("file", new FileSystemResource(audioFile));
 
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);

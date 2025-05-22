@@ -6,6 +6,8 @@ import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.service.OpenAiService;
 
+import pl.cwtwcz.dto.common.DallEImageRequestDto;
+import pl.cwtwcz.dto.common.DallEImageResponseDto;
 import pl.cwtwcz.dto.common.OpenAiImagePromptRequestDto;
 import pl.cwtwcz.dto.common.OpenAiVisionResponseDto;
 
@@ -113,16 +115,15 @@ public class OpenAiAdapter {
         }
     }
 
-    public pl.cwtwcz.dto.common.DallEImageResponseDto generateImage(String prompt, String modelName) {
-        pl.cwtwcz.dto.common.DallEImageRequestDto requestDto = new pl.cwtwcz.dto.common.DallEImageRequestDto(modelName,
-                prompt);
+    public DallEImageResponseDto generateImage(String prompt, String modelName) {
+        DallEImageRequestDto requestDto = new DallEImageRequestDto(modelName, prompt);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
-        HttpEntity<pl.cwtwcz.dto.common.DallEImageRequestDto> entity = new HttpEntity<>(requestDto, headers);
+        HttpEntity<DallEImageRequestDto> entity = new HttpEntity<>(requestDto, headers);
         try {
-            ResponseEntity<pl.cwtwcz.dto.common.DallEImageResponseDto> response = restTemplate.postForEntity(
-                    openAiImageUrl, entity, pl.cwtwcz.dto.common.DallEImageResponseDto.class);
+            ResponseEntity<DallEImageResponseDto> response = restTemplate.postForEntity(
+                    openAiImageUrl, entity, DallEImageResponseDto.class);
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 return response.getBody();
             } else {

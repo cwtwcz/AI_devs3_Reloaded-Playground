@@ -2,6 +2,8 @@ package pl.cwtwcz.service;
 
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 public class PromptService {
 
@@ -134,5 +136,42 @@ PS: TAK ISTNIEJE ULICA "KALINKOWA"
 
     public String sumarizeResponse(String fullAnswer) {
         return "Analizując wnioski poniżej, jakie miasta są prawdopodobnie na fragmentach mapy. Odpowiedz zwięźle, w formacie: miasto1, miasto2, miasto3.:\n#######\n" + fullAnswer;
+    }
+
+    public String speechToTextPrompt(String languageCode) {
+        if ("PL".equalsIgnoreCase(languageCode)) {
+            return "Pracujesz w callcenter i zajmujesz się w profesjonalnym spisywaniem zeznań ludzi.";
+        } else if ("EN".equalsIgnoreCase(languageCode)) {
+            return "You work in a call center and your job is to professionally transcribe people's statements.";
+        } else {
+            return "Transcribe the audio as accurately as possible.";
+        }
+    }
+
+    public String extractTextFromImagePrompt() {
+        return "Extract all visible text from the provided image. Return only the text, without any commentary or explanation.";
+    }
+
+    public String extractRelevantNoteFilenamesPrompt(Map<String, String> transcriptions) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("""
+Otrzymujesz poniżej transkrypcje notatek z plików. Twoim zadaniem jest wybrać TYLKO TE, które zawierają informacje o:
+- ludziach: informacje o schwytanych ludziach lub śladach ich obecności
+- hardware: usterki hardware (nie software)
+
+Dla każdej notatki, która pasuje, zwróć NAZWĘ PLIKU oraz kategorię w formacie:
+plik1.txt|people
+plik2.txt|hardware
+plik18.png|hardware
+plik20.png|hardware
+plik22.png|people
+
+Oto notatki:
+""");
+        for (Map.Entry<String, String> entry : transcriptions.entrySet()) {
+            sb.append("==== " + entry.getKey() + " ====" + "\n");
+            sb.append(entry.getValue()).append("\n\n");
+        }
+        return sb.toString();
     }
 }

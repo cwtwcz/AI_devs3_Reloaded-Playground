@@ -1,0 +1,1 @@
+Error: Internal problem while querying LLM (vision).

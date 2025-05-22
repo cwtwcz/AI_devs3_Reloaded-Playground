@@ -48,7 +48,7 @@ public class W02D01Service {
                 throw new RuntimeException("No audio files found in " + inputDir);
             List<String> transcriptions = audioFiles.stream()
                     .peek(audio -> logger.info("Transcribing {}", audio.getName()))
-                    .map(audio -> groqAdapter.speechToText(audio.getAbsolutePath()))
+                    .map(audio -> groqAdapter.speechToText(audio.getAbsolutePath(), "PL"))
                     .collect(Collectors.toList());
 
             // Step 2: Concatenate all transcriptions
