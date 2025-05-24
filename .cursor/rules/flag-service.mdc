@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+If you need to search for a "Flag" eg. in a String, use the [FlagService.java](mdc:src/main/java/pl/cwtwcz/service/FlagService.java)

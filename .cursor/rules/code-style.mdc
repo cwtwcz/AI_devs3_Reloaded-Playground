@@ -1,0 +1,11 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+- Try to divide longer code into smaller code blocks and add a "// Step X. description" comment before to visually separate it.
+- Always use DTOs to send or read data to/from REST APIs. Look if you can reuse an existing DTO. If not, create a new one in the right place in the dto/ directory. Try to not break existing DTOs, by modifying them.
+- Use pl.cwtwcz as your base package.
+- When creating a new Service method, try to mimic the code style of existing similar service classes.
+
+- When using constant values, urls, keys. Use the [application.properties](mdc:src/main/resources/application.properties) and [example-application.properties](mdc:src/main/resources/example-application.properties) files.

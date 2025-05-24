@@ -1,0 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Use Lombok instead of creating gettters and setters.
+
+For Services, if possible, use "@RequiredArgsConstructor" for dependency injection

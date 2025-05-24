@@ -1,0 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+- if you want to use an LLM for any reason. For the communication use [OpenAiAdapter.java](mdc:src/main/java/pl/cwtwcz/adapter/OpenAiAdapter.java) for all typical cases.
+
+- use [GroqAdapter.java](mdc:src/main/java/pl/cwtwcz/adapter/GroqAdapter.java) for audio transcription

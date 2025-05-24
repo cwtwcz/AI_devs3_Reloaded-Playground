@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+- If you make any operations on files, try to encapsulate the code in the [FileService.java](mdc:src/main/java/pl/cwtwcz/service/FileService.java) class.

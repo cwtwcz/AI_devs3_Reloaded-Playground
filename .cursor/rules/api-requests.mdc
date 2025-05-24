@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+If you want to make an REST API Call use the [ApiExplorerService.java](mdc:src/main/java/pl/cwtwcz/service/ApiExplorerService.java) class

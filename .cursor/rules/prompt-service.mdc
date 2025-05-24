@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+For prompt creation use always the [PromptService.java](mdc:src/main/java/pl/cwtwcz/service/PromptService.java) file

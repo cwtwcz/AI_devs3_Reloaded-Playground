@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+If you scrape/parse whole web pages, use the [PageScraperService.java](mdc:src/main/java/pl/cwtwcz/service/PageScraperService.java) to encapsulate the process
