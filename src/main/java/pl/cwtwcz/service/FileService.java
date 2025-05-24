@@ -5,8 +5,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Base64;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -42,19 +49,98 @@ public class FileService {
     }
 
     /**
-     * Reads a file from the specified path and returns its contents as a base64-encoded string.
-     *
+     * Reads a file from the specified path and returns its contents as a
+     * base64-encoded string.
+     * 
      * @param filePath The path to the file.
      * @return The base64-encoded contents of the file.
      */
     public String readFileAsBase64(String filePath) {
         logger.info("Reading file as base64: {}", filePath);
         try {
-            java.nio.file.Path path = java.nio.file.Paths.get(filePath);
-            byte[] fileBytes = java.nio.file.Files.readAllBytes(path);
-            return java.util.Base64.getEncoder().encodeToString(fileBytes);
+            Path path = Paths.get(filePath);
+            byte[] fileBytes = Files.readAllBytes(path);
+            return Base64.getEncoder().encodeToString(fileBytes);
         } catch (Exception e) {
             throw new RuntimeException("Failed to read file as base64: " + filePath, e);
+        }
+    }
+
+    /**
+     * Writes string content to a file.
+     * 
+     * @param filePath The path where to write the file.
+     * @param content The string content to write.
+     */
+    public void writeStringToFile(String filePath, String content) {
+        logger.info("Writing string content to file: {}", filePath);
+        try {
+            Files.write(Paths.get(filePath), content.getBytes());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to write string to file: " + filePath, e);
+        }
+    }
+
+    /**
+     * Reads a text file and returns its content as a string.
+     * 
+     * @param filePath The path to the file to read.
+     * @return The file content as a string.
+     */
+    public String readStringFromFile(String filePath) {
+        logger.info("Reading string content from file: {}", filePath);
+        try {
+            return Files.readString(Paths.get(filePath));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to read string from file: " + filePath, e);
+        }
+    }
+
+    /**
+     * Checks if a file exists at the specified path.
+     * 
+     * @param filePath The path to check.
+     * @return True if the file exists, false otherwise.
+     */
+    public boolean fileExists(String filePath) {
+        return Files.exists(Paths.get(filePath));
+    }
+
+    /**
+     * Creates directories for the specified path if they don't exist.
+     * 
+     * @param directoryPath The directory path to create.
+     */
+    public void createDirectories(String directoryPath) {
+        logger.info("Creating directories: {}", directoryPath);
+        try {
+            Files.createDirectories(Paths.get(directoryPath));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create directories: " + directoryPath, e);
+        }
+    }
+
+    /**
+     * Downloads a file from URL to the specified destination path.
+     * 
+     * @param url The URL to download from.
+     * @param destinationPath The path where to save the downloaded file.
+     */
+    public void downloadFile(String url, String destinationPath) {
+        logger.info("Downloading file from {} to {}", url, destinationPath);
+        try {
+            URL fileUrl = URI.create(url).toURL();
+            try (InputStream in = fileUrl.openStream();
+                    FileOutputStream out = new FileOutputStream(destinationPath)) {
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                while ((bytesRead = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, bytesRead);
+                }
+            }
+            logger.info("Successfully downloaded file: {}", destinationPath);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to download file: " + url, e);
         }
     }
 }

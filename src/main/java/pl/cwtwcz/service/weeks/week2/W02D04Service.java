@@ -31,7 +31,7 @@ import pl.cwtwcz.service.FlagService;
 @Service
 public class W02D04Service {
 
-    private static final Logger logger = LoggerFactory.getLogger(W02D03Service.class);
+    private static final Logger logger = LoggerFactory.getLogger(W02D04Service.class);
 
     private final GroqAdapter groqAdapter;
     private final OpenAiAdapter openAiAdapter;

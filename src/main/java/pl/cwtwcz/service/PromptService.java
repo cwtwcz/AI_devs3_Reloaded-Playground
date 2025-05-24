@@ -148,9 +148,7 @@ PS: TAK ISTNIEJE ULICA "KALINKOWA"
         }
     }
 
-    public String extractTextFromImagePrompt() {
-        return "Extract all visible text from the provided image. Return only the text, without any commentary or explanation.";
-    }
+    public String extractTextFromImagePrompt() {        return "Extract all visible text from the provided image. Return only the text, without any commentary or explanation.";    }
 
     public String extractRelevantNoteFilenamesPrompt(Map<String, String> transcriptions) {
         StringBuilder sb = new StringBuilder();
@@ -173,5 +171,57 @@ Oto notatki:
             sb.append(entry.getValue()).append("\n\n");
         }
         return sb.toString();
+    }
+
+    /**
+     * Creates a prompt for describing images in the context of Professor Maj's scientific article.
+     *
+     * @param altText Alternative text for the image (optional)
+     * @return Formatted prompt for image description
+     */
+    public String w02d05_createImageDescriptionPrompt(String altText) {
+        return "Opisz szczegółowo co widzisz na tym obrazie. Kontekst: to jest obraz z artykułu naukowego profesora Maja. "
+                + (altText != null && !altText.isEmpty() ? "Alt text: " + altText : "");
+    }
+
+    /**
+     * Creates a prompt for answering questions based on article content.
+     *
+     * @param articleContent The full content of the article
+     * @param question The question to answer
+     * @return Formatted prompt for question answering
+     */
+    public String w02d05_createQuestionAnswerPrompt(String articleContent, String question) {
+        return "Na podstawie poniższego artykułu odpowiedz BARDZO KONKRETNIE i krótko (w jednym zdaniu) na pytanie. " +
+                "Szukaj dokładnej odpowiedzi w tekście, opisach obrazów i transkrypcjach audio. " +
+                "Jeśli pytanie dotyczy konkretnego przedmiotu, owocu, nazwy - podaj dokładną nazwę.\n\n" +
+                "TREŚĆ ARTYKUŁU (tekst, opisy obrazów, transkrypcje audio):\n" + articleContent + "\n\n" +
+                "PYTANIE: " + question + "\n\n" +
+                "ODPOWIEDŹ (bardzo konkretnie, krótko):";
+    }
+
+    /**
+     * Creates a prompt for answering multiple questions based on article content in one request.
+     *
+     * @param articleContent The full content of the article
+     * @param questions Map of question ID to question text
+     * @return Formatted prompt for answering multiple questions
+     */
+    public String w02d05_createMultipleQuestionsPrompt(String articleContent, Map<String, String> questions) {
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("Na podstawie poniższego artykułu odpowiedz BARDZO KONKRETNIE i krótko (w jednym zdaniu) na każde z pytań. ");
+        prompt.append("Szukaj dokładnej odpowiedzi w tekście, opisach obrazów i transkrypcjach audio. ");
+        prompt.append("Jeśli pytanie dotyczy konkretnego przedmiotu, owocu, nazwy - podaj dokładną nazwę.\n\n");
+        
+        prompt.append("TREŚĆ ARTYKUŁU (tekst, opisy obrazów, transkrypcje audio):\n");
+        prompt.append(articleContent).append("\n\n");
+        
+        prompt.append("PYTANIA:\n");
+        for (Map.Entry<String, String> entry : questions.entrySet()) {
+            prompt.append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
+        }
+        
+        prompt.append("\nODPOWIEDZI (format: ID: odpowiedź):\n");
+        return prompt.toString();
     }
 }

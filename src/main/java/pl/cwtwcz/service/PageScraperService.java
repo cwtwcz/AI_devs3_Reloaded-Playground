@@ -96,4 +96,83 @@ public class PageScraperService {
             throw new RuntimeException("Unexpected error during login", e);
         }
     }
+
+    /**
+     * Extracts clean text content from HTML by removing script/style tags and HTML markup.
+     * 
+     * @param html The HTML content to process
+     * @return Clean text extracted from HTML
+     */
+    public String extractTextFromHtml(String html) {
+        // Step 1. Remove script and style elements
+        String cleanHtml = html.replaceAll("(?s)<script.*?</script>", "")
+                .replaceAll("(?s)<style.*?</style>", "");
+
+        // Step 2. Extract text from common HTML tags and remove HTML tags
+        String text = cleanHtml.replaceAll("<[^>]+>", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+
+        return text;
+    }
+
+    /**
+     * Extracts image source URLs from HTML content.
+     * 
+     * @param html The HTML content to parse
+     * @return List of image source URLs found in the HTML
+     */
+    public java.util.List<String> extractImageSources(String html) {
+        java.util.List<String> imageSources = new java.util.ArrayList<>();
+
+        // Step 1. Create pattern to match img src attributes
+        Pattern imgPattern = Pattern.compile("<img[^>]*src=[\"']([^\"']*)[\"'][^>]*>", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = imgPattern.matcher(html);
+
+        // Step 2. Extract all image sources
+        while (matcher.find()) {
+            String src = matcher.group(1);
+            if (!src.isEmpty()) {
+                imageSources.add(src);
+            }
+        }
+
+        return imageSources;
+    }
+
+    /**
+     * Extracts audio source URLs from HTML content.
+     * 
+     * @param html The HTML content to parse
+     * @return List of audio source URLs found in the HTML
+     */
+    public java.util.List<String> extractAudioSources(String html) {
+        java.util.List<String> audioSources = new java.util.ArrayList<>();
+
+        // Step 1. Look for audio source tags
+        Pattern audioSourcePattern = Pattern.compile("<source[^>]*src=[\"']([^\"']*\\.mp3)[\"'][^>]*>",
+                Pattern.CASE_INSENSITIVE);
+        Matcher matcher = audioSourcePattern.matcher(html);
+
+        while (matcher.find()) {
+            String src = matcher.group(1);
+            if (!src.isEmpty()) {
+                audioSources.add(src);
+            }
+        }
+
+        // Step 2. Look for direct links to mp3 files
+        Pattern mp3LinkPattern = Pattern.compile("<a[^>]*href=[\"']([^\"']*\\.mp3)[\"'][^>]*>",
+                Pattern.CASE_INSENSITIVE);
+        matcher = mp3LinkPattern.matcher(html);
+
+        while (matcher.find()) {
+            String href = matcher.group(1);
+            if (!href.isEmpty()) {
+                audioSources.add(href);
+            }
+        }
+
+        return audioSources;
+    }
 }

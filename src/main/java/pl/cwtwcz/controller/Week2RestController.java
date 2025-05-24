@@ -9,6 +9,7 @@ import pl.cwtwcz.service.weeks.week2.W02D01Service;
 import pl.cwtwcz.service.weeks.week2.W02D02Service;
 import pl.cwtwcz.service.weeks.week2.W02D03Service;
 import pl.cwtwcz.service.weeks.week2.W02D04Service;
+import pl.cwtwcz.service.weeks.week2.W02D05Service;
 
 @RequiredArgsConstructor
 @RestController
@@ -19,6 +20,7 @@ public class Week2RestController {
     private final W02D02Service w02d02Service;
     private final W02D03Service w02d03Service;
     private final W02D04Service w02d04Service;
+    private final W02D05Service w02d05Service;
 
     @GetMapping("/days/1")
     public String w02d01() {
@@ -38,5 +40,10 @@ public class Week2RestController {
     @GetMapping("/days/4")
     public String w02d04() {
         return w02d04Service.w02d04();
+    }
+
+    @GetMapping("/days/5")
+    public String w02d05() {
+        return w02d05Service.w02d05();
     }
 }
