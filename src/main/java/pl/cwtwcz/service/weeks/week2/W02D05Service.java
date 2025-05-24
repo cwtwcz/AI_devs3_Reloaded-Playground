@@ -14,8 +14,8 @@ import pl.cwtwcz.service.FileService;
 import pl.cwtwcz.service.PageScraperService;
 import pl.cwtwcz.service.PromptService;
 import pl.cwtwcz.service.FlagService;
-import pl.cwtwcz.dto.week2.ArxivRequestDto;
 import pl.cwtwcz.dto.common.OpenAiImagePromptRequestDto;
+import pl.cwtwcz.dto.week2.day5.ArxivRequestDto;
 
 import java.util.*;
 import java.util.regex.Matcher;
