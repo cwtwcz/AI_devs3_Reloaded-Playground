@@ -224,4 +224,51 @@ Oto notatki:
         prompt.append("\nODPOWIEDZI (format: ID: odpowiedź):\n");
         return prompt.toString();
     }
+
+    /**
+     * Creates a prompt for analyzing facts and extracting key information for W03D01.
+     *
+     * @param allFactsContent All facts content concatenated 
+     * @return Formatted prompt for facts analysis
+     */
+    public String w03d01_createFactsAnalysisPrompt(String allFactsContent) {
+        return "Przeanalizuj wszystkie podane fakty i wyekstrahuj kluczowe informacje:\n\n" +
+                "Pliki z faktami:\n" + allFactsContent + "\n\n" +
+                "Wygeneruj podsumowanie zawierające:\n" +
+                "- Wszystkie osoby wymienione z ich opisami/zawodami/umiejętnościami\n" +
+                "- Wszystkie miejsca i lokacje\n" + 
+                "- Wszystkie technologie, przedmioty, urządzenia\n" +
+                "- Inne istotne informacje\n" +
+                "Zachowaj polski język i format pozwalający na łatwe przeszukiwanie.";
+    }
+
+    /**
+     * Creates a prompt for generating keywords for a single report in W03D01.
+     *
+     * @param filename Report filename
+     * @param reportContent Report content
+     * @param filenameInfo Information extracted from filename
+     * @param relatedFacts Related facts content
+     * @param factsAnalysis Complete facts analysis
+     * @return Formatted prompt for keyword generation
+     */
+    public String w03d01_createKeywordGenerationPrompt(String filename, String reportContent, 
+                                                      String filenameInfo, String relatedFacts, 
+                                                      String factsAnalysis) {
+        return "Wygeneruj słowa kluczowe dla raportu w języku polskim (mianownik, oddzielone przecinkami).\n\n" +
+                "NAZWA PLIKU: " + filename + "\n" +
+                "INFORMACJE Z NAZWY PLIKU: " + filenameInfo + "\n\n" +
+                "TREŚĆ RAPORTU:\n" + reportContent + "\n\n" +
+                "POWIĄZANE FAKTY:\n" + relatedFacts + "\n\n" +
+                "WSZYSTKIE DOSTĘPNE FAKTY (dla kontekstu):\n" + factsAnalysis + "\n\n" +
+                "ZASADY:\n" +
+                "- Słowa kluczowe muszą być w języku polskim w mianowniku\n" +
+                "- Oddzielone przecinkami (np. słowo1,słowo2,słowo3)\n" +
+                "- Uwzględnij treść raportu, powiązane fakty i informacje z nazwy pliku\n" +
+                "- Dodaj nazwiska i imiona osób, jeśli są istotne\n" +
+                "- Dodaj zawody, technologie, miejsca, przedmioty\n" +
+                "- Bądź specyficzny dla tego konkretnego raportu\n" +
+                "- Jeśli w faktach są informacje o osobach z raportu, uwzględnij je\n\n" +
+                "Zwróć TYLKO listę słów kluczowych oddzielonych przecinkami, bez dodatkowych komentarzy.";
+    }
 }

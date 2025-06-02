@@ -15,6 +15,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
 import lombok.RequiredArgsConstructor;
+import java.util.Map;
+import java.util.HashMap;
 
 @RequiredArgsConstructor
 @Service
@@ -142,5 +144,68 @@ public class FileService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to download file: " + url, e);
         }
+    }
+
+    /**
+     * Lists all files in a directory that match the given filter criteria.
+     * 
+     * @param directoryPath The directory path to search in.
+     * @param fileExtension The file extension to filter by (e.g., ".txt").
+     * @param nameContains Optional string that filename must contain (can be null).
+     * @return Map of filename to file path for matching files.
+     */
+    public Map<String, String> listFilesInDirectory(String directoryPath, String fileExtension, String nameContains) {
+        logger.info("Listing files in directory: {} with extension: {} containing: {}", directoryPath, fileExtension, nameContains);
+        Map<String, String> files = new HashMap<>();
+        try {
+            File dir = new File(directoryPath);
+            if (!dir.exists() || !dir.isDirectory()) {
+                logger.warn("Directory does not exist or is not a directory: {}", directoryPath);
+                return files;
+            }
+
+            File[] fileArray = dir.listFiles((file, name) -> {
+                boolean matchesExtension = name.endsWith(fileExtension);
+                boolean matchesContent = nameContains == null || name.contains(nameContains);
+                return matchesExtension && matchesContent;
+            });
+
+            if (fileArray != null) {
+                for (File file : fileArray) {
+                    files.put(file.getName(), file.getAbsolutePath());
+                }
+            }
+            
+            logger.info("Found {} matching files", files.size());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to list files in directory: " + directoryPath, e);
+        }
+        return files;
+    }
+
+    /**
+     * Reads multiple files and returns their contents as a map.
+     * 
+     * @param filePaths Map of filename to file path.
+     * @return Map of filename to file content.
+     */
+    public Map<String, String> readMultipleFiles(Map<String, String> filePaths) {
+        logger.info("Reading {} files", filePaths.size());
+        Map<String, String> fileContents = new HashMap<>();
+        
+        for (Map.Entry<String, String> entry : filePaths.entrySet()) {
+            String filename = entry.getKey();
+            String filePath = entry.getValue();
+            try {
+                String content = readStringFromFile(filePath);
+                fileContents.put(filename, content);
+                logger.info("Successfully read file: {}", filename);
+            } catch (Exception e) {
+                logger.error("Failed to read file: {} at path: {}", filename, filePath, e);
+                // Continue reading other files even if one fails
+            }
+        }
+        
+        return fileContents;
     }
 }
