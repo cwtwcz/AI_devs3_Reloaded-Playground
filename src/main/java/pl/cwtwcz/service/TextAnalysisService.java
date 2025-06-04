@@ -13,8 +13,8 @@ import java.util.regex.Pattern;
 public class TextAnalysisService {
 
     private static final DateTimeFormatter INPUT_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private static final DateTimeFormatter POLISH_DATE_FORMAT = DateTimeFormatter.ofPattern("d MMMM yyyy", 
-                                                                                            new Locale("pl", "PL"));
+    private static final DateTimeFormatter POLISH_DATE_FORMAT = DateTimeFormatter.ofPattern("d MMMM yyyy",
+            Locale.forLanguageTag("pl-PL"));
 
     /**
      * Extracts structured information from a filename using regex patterns.
@@ -47,7 +47,8 @@ public class TextAnalysisService {
     }
 
     /**
-     * Extracts date information from filename using YYYY-MM-DD pattern and Java Time API.
+     * Extracts date information from filename using YYYY-MM-DD pattern and Java
+     * Time API.
      * 
      * @param filename The filename to analyze
      * @return Formatted Polish date string or empty if no date found

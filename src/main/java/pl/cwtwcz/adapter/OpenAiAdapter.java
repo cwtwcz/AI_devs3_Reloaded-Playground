@@ -4,6 +4,8 @@ import com.theokanning.openai.OpenAiHttpException;
 import com.theokanning.openai.completion.chat.ChatCompletionChoice;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatMessage;
+import com.theokanning.openai.embedding.EmbeddingRequest;
+import com.theokanning.openai.embedding.EmbeddingResult;
 import com.theokanning.openai.service.OpenAiService;
 
 import pl.cwtwcz.dto.common.DallEImageRequestDto;
@@ -22,6 +24,7 @@ import static com.theokanning.openai.completion.chat.ChatMessageRole.USER;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -133,6 +136,51 @@ public class OpenAiAdapter {
         } catch (Exception e) {
             logger.error("Error during OpenAI image API call: {}", e.getMessage(), e);
             throw new RuntimeException("Error during OpenAI image API call: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Creates embeddings for the given text using the specified model.
+     *
+     * @param text The text to create embeddings for.
+     * @param model The embedding model to use (e.g., "text-embedding-3-large").
+     * @return List of Float values representing the embedding vector.
+     */
+    public List<Float> createEmbedding(String text, String model) {
+        if (text == null || text.isEmpty()) {
+            logger.warn("Text for embedding is empty.");
+            throw new IllegalArgumentException("Error: Text for embedding is empty.");
+        }
+
+        logger.info("Creating embedding for text (model: {}): \"{}\"", model, 
+                    text.length() > 100 ? text.substring(0, 100) + "..." : text);
+
+        try {
+            EmbeddingRequest request = EmbeddingRequest.builder()
+                    .model(model)
+                    .input(Collections.singletonList(text))
+                    .build();
+
+            EmbeddingResult result = openAiService.createEmbeddings(request);
+            
+            if (result != null && result.getData() != null && !result.getData().isEmpty()) {
+                List<Float> embedding = result.getData().get(0).getEmbedding()
+                        .stream()
+                        .map(Double::floatValue)
+                        .collect(Collectors.toList());
+                
+                logger.info("Created embedding with {} dimensions", embedding.size());
+                return embedding;
+            } else {
+                logger.warn("Received empty embedding result from OpenAI.");
+                throw new RuntimeException("Failed to get embedding from OpenAI.");
+            }
+        } catch (OpenAiHttpException e) {
+            logger.error("HTTP error during embedding creation: {}", e.getMessage(), e);
+            throw new RuntimeException("HTTP error during embedding creation: " + e.statusCode, e);
+        } catch (Exception e) {
+            logger.error("Unexpected error during embedding creation", e);
+            throw new RuntimeException("Error creating embedding: " + e.getMessage(), e);
         }
     }
 }
