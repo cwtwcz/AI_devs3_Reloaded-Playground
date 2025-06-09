@@ -271,4 +271,52 @@ Oto notatki:
                 "- Jeśli w faktach są informacje o osobach z raportu, uwzględnij je\n\n" +
                 "Zwróć TYLKO listę słów kluczowych oddzielonych przecinkami, bez dodatkowych komentarzy.";
     }
+
+    /**
+     * Creates a prompt for generating SQL query based on database schema for W03D03.
+     *
+     * @param databaseSchemas The complete database schemas from SHOW CREATE TABLE commands
+     * @return Formatted prompt for SQL query generation
+     */
+    public String w03d03_createSqlQueryPrompt(String databaseSchemas) {
+        return "Na podstawie poniższych schematów bazy danych wygeneruj zapytanie SQL, które zwróci ID aktywnych datacenter zarządzanych przez nieaktywnych menadżerów.\n\n" +
+                "SCHEMATY BAZY DANYCH:\n" + databaseSchemas + "\n\n" +
+                "ZADANIE:\n" +
+                "Znajdź numery ID czynnych datacenter, które zarządzane są przez menadżerów, którzy aktualnie przebywają na urlopie (są nieaktywni).\n\n" +
+                "WYMAGANIA:\n" +
+                "- Datacenter muszą być aktywne\n" +
+                "- Menadżerowie tych datacenter muszą być nieaktywni (na urlopie)\n" +
+                "- Zwróć tylko ID datacenter\n" +
+                "- Użyj odpowiednich JOIN-ów między tabelami\n" +
+                "- Sprawdź status aktywności/nieaktywności w odpowiednich kolumnach\n\n" +
+                "Zwróć TYLKO surowe zapytanie SQL bez żadnych dodatkowych opisów, wyjaśnień czy formatowania Markdown. " +
+                "Zapytanie musi być gotowe do bezpośredniego wykonania.";
+    }
+
+    /**
+     * Creates a prompt for extracting names and places from Barbara's note for W03D04.
+     *
+     * @param note Barbara's note content
+     * @return Formatted prompt for names and places extraction
+     */
+    public String w03d04_createNamesAndPlacesExtractionPrompt(String note) {
+        return "Przeanalizuj poniższą notatkę i wyodrębnij:\n\n" +
+                "1. WSZYSTKIE IMIONA osób (w mianowniku, wielkich literach, bez polskich znaków)\n" +
+                "2. WSZYSTKIE NAZWY MIAST (w mianowniku, wielkich literach, bez polskich znaków)\n\n" +
+                "NOTATKA:\n" + note + "\n\n" +
+                "Odpowiedz w formacie:\n" +
+                "IMIONA:\n" +
+                "BARBARA\n" +
+                "ALEKSANDER\n" +
+                "...\n\n" +
+                "MIASTA:\n" +
+                "WARSZAWA\n" +
+                "KRAKOW\n" +
+                "...\n\n" +
+                "WAŻNE:\n" +
+                "- Imiona w mianowniku (np. BARBARA zamiast Barbarze)\n" +
+                "- Miasta bez polskich znaków (np. KRAKOW zamiast Kraków)\n" +
+                "- Wszystkie nazwy wielkimi literami\n" +
+                "- Nie dodawaj nic dodatkowego - tylko imiona i miasta z notatki";
+    }
 }

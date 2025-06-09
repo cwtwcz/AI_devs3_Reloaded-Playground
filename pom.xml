@@ -58,6 +58,19 @@
             <version>1.9.1</version>
         </dependency>
 
+        <!-- Neo4j Spring Boot Starter -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-neo4j</artifactId>
+        </dependency>
+
+        <!-- Apache Commons Text for string utilities -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+            <version>1.10.0</version>
+        </dependency>
+
         <!-- HTTP Client for Qdrant -->
         <dependency>
             <groupId>io.grpc</groupId>
