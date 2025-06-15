@@ -17,6 +17,15 @@ import java.util.Base64;
 import lombok.RequiredArgsConstructor;
 import java.util.Map;
 import java.util.HashMap;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriter;
+import javax.imageio.ImageWriteParam;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import javax.imageio.stream.ImageOutputStream;
 
 @RequiredArgsConstructor
 @Service
@@ -207,5 +216,106 @@ public class FileService {
         }
         
         return fileContents;
+    }
+
+    /**
+     * Writes base64-encoded image data to a file.
+     * 
+     * @param filePath The path where to save the image file.
+     * @param base64Data The base64-encoded image data (without data:image/... prefix).
+     */
+    public void writeBase64ToImageFile(String filePath, String base64Data) {
+        logger.info("Writing base64 image data to file: {}", filePath);
+        try {
+            // Remove data URL prefix if present (e.g., "data:image/png;base64,")
+            String cleanBase64 = base64Data;
+            if (base64Data.contains(",")) {
+                cleanBase64 = base64Data.substring(base64Data.indexOf(",") + 1);
+            }
+            
+            byte[] imageBytes = Base64.getDecoder().decode(cleanBase64);
+            Files.write(Paths.get(filePath), imageBytes);
+            logger.info("Successfully wrote {} bytes to image file: {}", imageBytes.length, filePath);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to write base64 image to file: " + filePath, e);
+        }
+    }
+
+    /**
+     * Scales down base64-encoded image data to specified maximum dimensions and returns scaled base64.
+     * 
+     * @param base64Data The base64-encoded image data (without data:image/... prefix).
+     * @param maxWidth Maximum width for the scaled image.
+     * @param maxHeight Maximum height for the scaled image.
+     * @return The scaled image as base64-encoded string.
+     */
+    public String scaleBase64Image(String base64Data, int maxWidth, int maxHeight) {
+        logger.info("Scaling base64 image to max dimensions: {}x{}", maxWidth, maxHeight);
+        try {
+            // Remove data URL prefix if present (e.g., "data:image/png;base64,")
+            String cleanBase64 = base64Data;
+            if (base64Data.contains(",")) {
+                cleanBase64 = base64Data.substring(base64Data.indexOf(",") + 1);
+            }
+            
+            // Decode base64 to image
+            byte[] imageBytes = Base64.getDecoder().decode(cleanBase64);
+            BufferedImage originalImage = ImageIO.read(new ByteArrayInputStream(imageBytes));
+            
+            int originalWidth = originalImage.getWidth();
+            int originalHeight = originalImage.getHeight();
+            logger.info("Original image dimensions: {}x{}", originalWidth, originalHeight);
+            
+            // Calculate new dimensions while maintaining aspect ratio
+            int newWidth = originalWidth;
+            int newHeight = originalHeight;
+            
+            if (originalWidth > maxWidth || originalHeight > maxHeight) {
+                double widthRatio = (double) maxWidth / originalWidth;
+                double heightRatio = (double) maxHeight / originalHeight;
+                double ratio = Math.min(widthRatio, heightRatio);
+                
+                newWidth = (int) (originalWidth * ratio);
+                newHeight = (int) (originalHeight * ratio);
+                logger.info("Scaling image to: {}x{} (ratio: {:.3f})", newWidth, newHeight, ratio);
+            } else {
+                logger.info("Image is already within size limits, no scaling needed");
+                return base64Data;
+            }
+            
+            // Create scaled image
+            BufferedImage scaledImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g2d = scaledImage.createGraphics();
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.drawImage(originalImage, 0, 0, newWidth, newHeight, null);
+            g2d.dispose();
+            
+            // Convert scaled image back to base64 using JPEG with quality compression
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            
+            // Use JPEG compression with quality setting for smaller file size
+            ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("JPEG").next();
+            ImageWriteParam jpgWriteParam = jpgWriter.getDefaultWriteParam();
+            jpgWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+            jpgWriteParam.setCompressionQuality(0.95f); // 95% quality for better OCR readability
+            
+            ImageOutputStream imageOutputStream = ImageIO.createImageOutputStream(baos);
+            jpgWriter.setOutput(imageOutputStream);
+            jpgWriter.write(null, new javax.imageio.IIOImage(scaledImage, null, null), jpgWriteParam);
+            jpgWriter.dispose();
+            imageOutputStream.close();
+            
+            byte[] scaledImageBytes = baos.toByteArray();
+            String scaledBase64 = Base64.getEncoder().encodeToString(scaledImageBytes);
+            
+            logger.info("Successfully scaled and compressed image from {}x{} to {}x{} ({} bytes -> {} bytes, JPEG 95% quality)", 
+                originalWidth, originalHeight, newWidth, newHeight, imageBytes.length, scaledImageBytes.length);
+            
+            return scaledBase64;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to scale base64 image: " + e.getMessage(), e);
+        }
     }
 }

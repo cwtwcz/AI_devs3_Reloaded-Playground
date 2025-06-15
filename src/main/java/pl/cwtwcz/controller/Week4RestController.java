@@ -11,6 +11,7 @@ import pl.cwtwcz.service.weeks.week4.W04D01Service;
 import pl.cwtwcz.service.weeks.week4.W04D02Service;
 import pl.cwtwcz.service.weeks.week4.W04D03Service;
 import pl.cwtwcz.service.weeks.week4.W04D04Service;
+import pl.cwtwcz.service.weeks.week4.W04D05Service;
 import pl.cwtwcz.dto.week4.DroneInstructionDto;
 import pl.cwtwcz.dto.week4.DroneResponseDto;
 
@@ -23,6 +24,7 @@ public class Week4RestController {
     private final W04D02Service w04d02Service;
     private final W04D03Service w04d03Service;
     private final W04D04Service w04d04Service;
+    private final W04D05Service w04d05Service;
 
     @GetMapping("days/1")
     public String w04d01() {
@@ -42,5 +44,10 @@ public class Week4RestController {
     @PostMapping("days/4")
     public DroneResponseDto w04d04(@RequestBody DroneInstructionDto instruction) {
         return w04d04Service.w04d04(instruction);
+    }
+
+    @GetMapping("days/5")
+    public String w04d05() {
+        return w04d05Service.w04d05();
     }
 }

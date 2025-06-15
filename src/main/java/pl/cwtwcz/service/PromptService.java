@@ -3,6 +3,7 @@ package pl.cwtwcz.service;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class PromptService {
@@ -535,5 +536,75 @@ public class PromptService {
                 "4. Znajdź co znajduje się na tej pozycji w mapie\n\n" +
                 "WAŻNE: Odpowiedz TYLKO nazwą obiektu/miejsca na końcowej pozycji, maksymalnie 2 słowa po polsku.\n" +
                 "Przykłady odpowiedzi: 'drzewo', 'skały', 'góry', 'wiatrak', 'dom', 'auto', 'jaskinia', 'las', 'łąka', 'start'";
+    }
+
+    /**
+     * Creates a prompt for OCR analysis of notebook page 19 for W04D05.
+     *
+     * @return Formatted prompt for OCR analysis
+     */
+    public String w04d05_createOcrPrompt(String previousNotes) {
+        return """
+                Przeanalizuj ten obraz notatki i wyciągnij z niego CAŁY widoczny tekst.
+                To jest skan strony z notatkami Rafała, który miał w momencie pisania namieszane w głowie - mogą być chaotyczne i niezrozumiałe.
+                Rafał w momencie pisania najpewniej znajdował się w jaskini w Grudziądzu.
+                Na obrazku są 3 fragmenty tekstu. Odczytaj tylko te pisany ręcznym pismem. Jeśli słowo jest niewyraźne, staraj się domyśleć jakie słowo powinno być w tym miejscu.
+                Zwróć szczególną uwagę na:
+                - Nazwy miejscowości (może być rozbite na fragmenty)
+                - Daty i numery
+                - Wszelkie napisane słowa, nawet jeśli wydają się dziwne
+
+                Odpowiedz TYLKO tekstem bez dodatkowych komentarzy.
+                Dla kontekstu przekazuje Tobie poprzednie notatki Rafała (Pomogą one poprawnie określić nierywaźne słowa):
+                """
+                + previousNotes;
+    }
+
+    /**
+     * Creates a prompt for analyzing notebook content and answering questions for
+     * W04D05.
+     *
+     * @param question                 The question to answer
+     * @param notebookContent          Full notebook content (text + OCR)
+     * @param previousIncorrectAnswers Set of previous incorrect answers
+     * @param hint                     Optional hint from centrala
+     * @return Formatted prompt for question answering
+     */
+    public String w04d05_createQuestionAnswerPrompt(
+            String question, String notebookContent, Set<String> previousIncorrectAnswers, String hint) {
+        StringBuilder prompt = new StringBuilder();
+
+        prompt.append(
+                "Jesteś ekspertem do analizy dokumentów. Analizujesz notatki należące do chorego psychicznie człowieka o imieniu Rafał. ");
+        prompt.append("Notatki są chaotyczne i zawierają urojeń, ale układają się w jedną większą całość.\n\n");
+
+        prompt.append("ZAWARTOŚĆ NOTATNIKA:\n");
+        prompt.append(notebookContent);
+        prompt.append("\n\n");
+
+        prompt.append("PYTANIE: ").append(question).append("\n\n");
+
+        if (!previousIncorrectAnswers.isEmpty()) {
+            prompt.append("POPRZEDNIE BŁĘDNE ODPOWIEDZI (NIE UŻYWAJ ICH!):\n");
+            for (String incorrectAnswer : previousIncorrectAnswers) {
+                prompt.append("- ").append(incorrectAnswer).append("\n");
+            }
+            prompt.append("\n");
+        }
+
+        if (hint != null && !hint.trim().isEmpty()) {
+            prompt.append("PODPOWIEDŹ: ").append(hint).append("\n\n");
+        }
+
+        prompt.append("INSTRUKCJE:\n");
+        prompt.append("- Znajdź odpowiedź w treści notatnika\n");
+        prompt.append("- Jeśli pytanie dotyczy daty względnej, oblicz konkretną datę w formacie YYYY-MM-DD\n");
+        prompt.append("- Zwróć uwagę na drobne detale i szary tekst pod rysunkami\n");
+        prompt.append("- Pamiętaj, że tekst z OCR może zawierać błędy, szczególnie nazwy miejscowości\n");
+        prompt.append(
+                "- Gdy odnajdziesz odniesienia do pisma świętego lub innej literatury, odnajdź fragment tekstu do którego prowadzi odniesienie.\n");
+        prompt.append(
+                "- WAŻNE:Odpowiedz TYLKO zwięzłą odpowiedzią, bez dodatkowych wyjaśnień. Odpowiedź ma być jak najkrótsza. Bez zbędnych znaków interpunkcyjnych.\n");
+        return prompt.toString();
     }
 }
