@@ -126,4 +126,41 @@ public class DatabaseQueryService {
     public String countRecords(String tableName) {
         return "SELECT COUNT(*) FROM " + tableName;
     }
+
+    // Phone answers queries for W05D01
+
+    /**
+     * Zapytanie do pobrania poprawnej odpowiedzi z phone_answers
+     */
+    public String selectCorrectPhoneAnswer() {
+        return "SELECT answer FROM phone_answers WHERE question_id = ? AND is_correct = 1";
+    }
+
+    /**
+     * Zapytanie do pobrania niepoprawnych odpowiedzi z phone_answers
+     */
+    public String selectIncorrectPhoneAnswers() {
+        return "SELECT answer FROM phone_answers WHERE question_id = ? AND is_correct = 0 ORDER BY rowid DESC";
+    }
+
+    /**
+     * Zapytanie do sprawdzenia czy odpowiedź już istnieje jako poprawna w phone_answers
+     */
+    public String selectCorrectPhoneAnswerExists() {
+        return "SELECT is_correct FROM phone_answers WHERE question_id = ? AND is_correct = 1";
+    }
+
+    /**
+     * Zapytanie do wstawienia lub aktualizacji poprawnej odpowiedzi w phone_answers
+     */
+    public String insertOrReplaceCorrectPhoneAnswer() {
+        return "INSERT OR REPLACE INTO phone_answers (question_id, answer, is_correct) VALUES (?, ?, 1)";
+    }
+
+    /**
+     * Zapytanie do wstawienia niepoprawnej odpowiedzi w phone_answers
+     */
+    public String insertIncorrectPhoneAnswer() {
+        return "INSERT INTO phone_answers (question_id, answer, is_correct) VALUES (?, ?, 0)";
+    }
 } 

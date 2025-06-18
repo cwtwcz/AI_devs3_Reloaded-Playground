@@ -50,4 +50,34 @@ public class ApiExplorerService {
         }
     }
 
+    /**
+     * Sends a POST request with a JSON payload to the specified URL and returns the
+     * response as a String.
+     *
+     * @param url     The URL to send the POST request to.
+     * @param payload The object to be serialized to JSON and sent as the request body.
+     * @param <T>     The type of the request payload.
+     * @return The API response as String.
+     * @throws RuntimeException if there's an error with the API call or response processing.
+     */
+    public <T> String postJsonForString(String url, T payload) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set(HttpHeaders.CONTENT_ENCODING, "UTF-8");
+        headers.set(HttpHeaders.ACCEPT_CHARSET, "UTF-8");
+        HttpEntity<T> requestEntity = new HttpEntity<>(payload, headers);
+
+        try {
+            String response = restTemplate.postForObject(url, requestEntity, String.class);
+            if (response == null) {
+                logger.warn("Received null response from API for URL: {}", url);
+                throw new RuntimeException("Received null response from API for URL: " + url);
+            }
+            return response;
+        } catch (Exception e) {
+            logger.error("Error during POST API call to {}: {}", url, e.getMessage(), e);
+            throw new RuntimeException("Error during POST API call to " + url + ": " + e.getMessage());
+        }
+    }
+
 }

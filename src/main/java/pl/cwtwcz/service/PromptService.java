@@ -2,12 +2,13 @@ package pl.cwtwcz.service;
 
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 @Service
 public class PromptService {
-
     /**
      * Creates a prompt that instructs LLM to respond with only the year number from
      * a question.
@@ -605,6 +606,439 @@ public class PromptService {
                 "- Gdy odnajdziesz odniesienia do pisma świętego lub innej literatury, odnajdź fragment tekstu do którego prowadzi odniesienie.\n");
         prompt.append(
                 "- WAŻNE:Odpowiedz TYLKO zwięzłą odpowiedzią, bez dodatkowych wyjaśnień. Odpowiedź ma być jak najkrótsza. Bez zbędnych znaków interpunkcyjnych.\n");
+        return prompt.toString();
+    }
+
+    /**
+     * Creates a prompt for initial phone conversation reconstruction for W05D01.
+     *
+     * @param phoneData The phone data containing conversation fragments and
+     *                  remaining sentences
+     * @return Formatted prompt for initial reconstruction
+     */
+    public String w05d01_createInitialReconstructionPrompt(Map<String, Object> phoneData) {
+        StringBuilder prompt = new StringBuilder();
+        prompt.append(
+                "ZADANIE: Zrekonstruuj 5 rozmów telefonicznych z fragmentów - BARDZO WAŻNE JEST PRECYZYJNE WYKONANIE.\n\n");
+
+        prompt.append("DANE WEJŚCIOWE:\n");
+        prompt.append("FRAGMENTY ROZMÓW (każda ma określone zdanie początkowe, końcowe i długość):\n");
+
+        Map<String, Map<String, Object>> conversations = (Map<String, Map<String, Object>>) phoneData
+                .get("conversations");
+        for (Map.Entry<String, Map<String, Object>> entry : conversations.entrySet()) {
+            Map<String, Object> conv = entry.getValue();
+            prompt.append(String.format("- %s:\n", entry.getKey()));
+            prompt.append(String.format("  * PIERWSZE ZDANIE: \"%s\"\n", conv.get("start")));
+            prompt.append(String.format("  * OSTATNIE ZDANIE: \"%s\"\n", conv.get("end")));
+            prompt.append(String.format("  * CAŁKOWITA DŁUGOŚĆ: %d zdań (włączając pierwsze i ostatnie)\n",
+                    conv.get("length")));
+            prompt.append("\n");
+        }
+
+        prompt.append("WSZYSTKIE ZDANIA DO WYKORZYSTANIA:\n");
+        // Dodaj zdania początkowe i końcowe
+        Set<String> usedSentences = new HashSet<>();
+        for (Map<String, Object> conv : conversations.values()) {
+            usedSentences.add((String) conv.get("start"));
+            usedSentences.add((String) conv.get("end"));
+        }
+
+        int sentenceNum = 1;
+        for (Map<String, Object> conv : conversations.values()) {
+            prompt.append(String.format("%d: \"%s\" [ZDANIE POCZĄTKOWE]\n", sentenceNum++, conv.get("start")));
+            prompt.append(String.format("%d: \"%s\" [ZDANIE KOŃCOWE]\n", sentenceNum++, conv.get("end")));
+        }
+
+        List<String> remainingSentences = (List<String>) phoneData.get("remainingSentences");
+        for (String sentence : remainingSentences) {
+            if (!usedSentences.contains(sentence)) {
+                prompt.append(String.format("%d: \"%s\"\n", sentenceNum++, sentence));
+            }
+        }
+
+        prompt.append("\n🚨 KRYTYCZNE ZASADY REKONSTRUKCJI (BEZWZGLĘDNIE OBOWIĄZUJĄCE!) 🚨\n");
+        prompt.append("1. ⚠️ KAŻDE ZDANIE MUSI WYSTĄPIĆ DOKŁADNIE 1 RAZ - ZERO DUPLIKATÓW!\n");
+        prompt.append("2. 🔒 PIERWSZE i OSTATNIE zdanie każdej rozmowy JEST NIEZMIENNE!\n");
+        prompt.append("3. 📏 DŁUGOŚĆ każdej rozmowy MUSI być DOKŁADNIE jak określono!\n");
+        prompt.append("4. ✅ WSZYSTKIE zdania muszą być wykorzystane - żadne nie może zostać pominięte!\n");
+        prompt.append("5. 🚫 KATEGORYCZNY ZAKAZ DUPLIKOWANIA ZDAŃ - każde zdanie tylko raz w całej rekonstrukcji!\n");
+        prompt.append("6. 🔍 PRZED ODPOWIEDZIĄ SPRAWDŹ CZY KAŻDE ZDANIE WYSTĘPUJE DOKŁADNIE RAZ!\n\n");
+
+        prompt.append("ALGORYTM REKONSTRUKCJI:\n");
+        prompt.append("1. Dla każdej rozmowy zacznij od zdania początkowego (NIEZMIENNEGO!)\n");
+        prompt.append("2. Dodawaj kolejne zdania które logicznie pasują do kontekstu\n");
+        prompt.append("3. Zakończ zdaniem końcowym (NIEZMIENNYM!)\n");
+        prompt.append("4. SPRAWDŹ czy łączna liczba zdań = WYMAGANA DŁUGOŚĆ\n");
+        prompt.append("5. SPRAWDŹ czy każde zdanie użyte dokładnie raz\n");
+        prompt.append("6. SPRAWDŹ czy wszystkie zdania zostały wykorzystane\n\n");
+
+        prompt.append("FORMAT ODPOWIEDZI - ZWRÓĆ TYLKO JSON:\n");
+        prompt.append("{\n");
+        prompt.append("  \"rozmowa01\": [\n");
+        prompt.append("    \"pierwsze zdanie rozmowy01\",\n");
+        prompt.append("    \"kolejne zdania...\",\n");
+        prompt.append("    \"ostatnie zdanie rozmowy01\"\n");
+        prompt.append("  ],\n");
+        prompt.append("  \"rozmowa02\": [...],\n");
+        prompt.append("  ...\n");
+        prompt.append("}\n\n");
+
+        prompt.append("🔍 OBOWIĄZKOWA LISTA KONTROLNA PRZED ODPOWIEDZIĄ:\n");
+        prompt.append("✅ Czy każda rozmowa ma DOKŁADNIE pierwsze i ostatnie zdanie jak określono?\n");
+        prompt.append("✅ Czy każda rozmowa ma DOKŁADNIE określoną długość (ani więcej, ani mniej)?\n");
+        prompt.append("✅ Czy KAŻDE zdanie zostało wykorzystane DOKŁADNIE RAZ (sprawdź każde z osobna)?\n");
+        prompt.append("✅ Czy WSZYSTKIE zdania zostały wykorzystane (żadne nie zostało pominięte)?\n");
+        prompt.append("✅ Czy NIE MA ŻADNYCH DUPLIKATÓW zdań w całej rekonstrukcji?\n");
+        prompt.append("✅ Czy liczba wszystkich zdań w rekonstrukcji = liczba zdań wejściowych?\n");
+        prompt.append("✅ Czy rozmowy mają logiczny sens?\n");
+        prompt.append("\n⚠️ INSTRUKCJA SPRAWDZANIA UNIKALNOŚCI:\n");
+        prompt.append("1. Policz wszystkie zdania w swojej rekonstrukcji\n");
+        prompt.append("2. Sprawdź czy każde zdanie występuje tylko raz\n");
+        prompt.append("3. Sprawdź czy liczba zdań = liczba zdań wejściowych\n");
+        prompt.append("4. JEŚLI KTÓRYKOLWIEK Z PUNKTÓW NIE JEST SPEŁNIONY - POPRAW REKONSTRUKCJĘ!\n");
+
+        return prompt.toString();
+    }
+
+    /**
+     * Creates a prompt for improving phone conversation reconstruction with
+     * feedback for W05D01.
+     *
+     * @param currentConversations Current reconstruction to improve
+     * @param phoneData            Original phone data with requirements
+     * @param validationReport     Report showing current validation issues
+     * @param iteration            Current iteration number
+     * @return Formatted prompt for feedback improvement
+     */
+    public String w05d01_createFeedbackImprovementPrompt(List<Map<String, Object>> currentConversations,
+            Map<String, Object> phoneData, String validationReport, int iteration) {
+
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("ZADANIE: Sprawdź i popraw rekonstrukcję rozmów telefonicznych - ITERACJA ").append(iteration)
+                .append("/3\n\n");
+
+        prompt.append("AKTUALNA REKONSTRUKCJA DO SPRAWDZENIA I POPRAWY:\n");
+        for (Map<String, Object> conv : currentConversations) {
+            prompt.append(String.format("=== %s ===\n", conv.get("name")));
+            List<String> sentences = (List<String>) conv.get("sentences");
+            if (sentences != null) {
+                prompt.append(String.format("AKTUALNA DŁUGOŚĆ: %d zdań\n", sentences.size()));
+                for (int i = 0; i < sentences.size(); i++) {
+                    prompt.append(String.format("%d. \"%s\"\n", i + 1, sentences.get(i)));
+                }
+            }
+            prompt.append("\n");
+        }
+
+        prompt.append("🚨 WYMAGANIA KTÓRE MUSZĄ BYĆ SPEŁNIONE (KRYTYCZNE!) 🚨\n");
+        Map<String, Map<String, Object>> conversations = (Map<String, Map<String, Object>>) phoneData
+                .get("conversations");
+
+        // Dodaj szczegółowe informacje o każdej rozmowie
+        int totalRequiredSentences = 0;
+        for (Map.Entry<String, Map<String, Object>> entry : conversations.entrySet()) {
+            Map<String, Object> conv = entry.getValue();
+            int requiredLength = (Integer) conv.get("length");
+            totalRequiredSentences += requiredLength;
+            prompt.append(String.format(
+                    "🔒 %s: PIERWSZE=\"%s\" (NIEZMIENNE!), OSTATNIE=\"%s\" (NIEZMIENNE!), WYMAGANA DŁUGOŚĆ=%d zdań (DOKŁADNIE!)\n",
+                    entry.getKey(), conv.get("start"), conv.get("end"), requiredLength));
+        }
+
+        // Dodaj informację o łącznej liczbie zdań
+        prompt.append(String.format("\n📊 ŁĄCZNA LICZBA ZDAŃ WE WSZYSTKICH ROZMOWACH: %d\n", totalRequiredSentences));
+        prompt.append("📋 KAŻDE ZDANIE MUSI WYSTĄPIĆ DOKŁADNIE RAZ W CAŁEJ REKONSTRUKCJI!\n");
+
+        prompt.append("\nRAPORT WALIDACJI:\n");
+        prompt.append(validationReport);
+
+        prompt.append("\n🚨 ZASADY POPRAWIANIA (BEZWZGLĘDNIE OBOWIĄZUJĄCE!) 🚨\n");
+        prompt.append("1. 🔒 PIERWSZE i OSTATNIE zdanie każdej rozmowy MUSI pozostać DOKŁADNIE niezmienione!\n");
+        prompt.append("2. 📏 DŁUGOŚĆ każdej rozmowy MUSI być DOKŁADNIE taka jak wymagana - ani więcej, ani mniej!\n");
+        prompt.append("3. 🔄 Możesz PRZESTAWIAĆ zdania wewnątrz rozmów (między pierwszym a ostatnim)\n");
+        prompt.append(
+                "4. ↔️ Możesz PRZENOSIĆ zdania między rozmowami TYLKO jeśli to nie naruszy wymaganych długości\n");
+        prompt.append("5. 🚫 KATEGORYCZNY ZAKAZ DUPLIKOWANIA - każde zdanie DOKŁADNIE RAZ w całej rekonstrukcji!\n");
+        prompt.append("6. ✅ WSZYSTKIE zdania muszą być wykorzystane - żadne nie może zostać pominięte!\n");
+        prompt.append("7. 🎯 PRIORYTET: Najpierw spełnij wymagania długości, potem poprawiaj logikę!\n");
+        prompt.append("8. ⚠️ KAŻDA ZMIANA MUSI ZACHOWAĆ ZASADĘ: 1 zdanie = 1 użycie (ZERO DUPLIKATÓW)!\n");
+        prompt.append("9. 🔍 PRZED KAŻDĄ ZMIANĄ SPRAWDŹ CZY ZDANIE JUŻ GDZIEŚ NIE WYSTĘPUJE!\n\n");
+
+        prompt.append("📋 INSTRUKCJE KROK PO KROK:\n");
+        prompt.append("1. 📊 Sprawdź długość każdej rozmowy względem wymagań (DOKŁADNIE!)\n");
+        prompt.append(
+                "2. ➕ Jeśli rozmowa ma za mało zdań - dodaj zdania (sprawdź czy nie są już użyte gdzie indziej!)\n");
+        prompt.append(
+                "3. ➖ Jeśli rozmowa ma za dużo zdań - przenieś nadmiarowe zdania (sprawdź czy nie stworzysz duplikatów!)\n");
+        prompt.append("4. 🔒 Upewnij się że pierwsze i ostatnie zdanie każdej rozmowy się NIE ZMIENIŁO!\n");
+        prompt.append("5. 🧮 Sprawdź czy suma wszystkich zdań się zgadza z wymaganą liczbą\n");
+        prompt.append("6. 🚫 SPRAWDŹ CZY KAŻDE ZDANIE WYSTĘPUJE DOKŁADNIE RAZ (nie więcej, nie mniej)!\n");
+        prompt.append("7. ✅ Sprawdź czy wszystkie zdania zostały wykorzystane!\n");
+        prompt.append("8. 🔍 PRZESKANUJ CAŁĄ REKONSTRUKCJĘ W POSZUKIWANIU DUPLIKATÓW!\n");
+        prompt.append("9. 🧠 Dopiero potem poprawiaj logikę i spójność\n\n");
+
+        prompt.append("FORMAT ODPOWIEDZI - ZWRÓĆ POPRAWIONĄ WERSJĘ JAKO JSON:\n");
+        prompt.append("{\n");
+        prompt.append("  \"rozmowa01\": [\n");
+        prompt.append("    \"pierwsze zdanie (NIEZMIENIONE)\",\n");
+        prompt.append("    \"zdania środkowe (dokładnie tyle ile potrzeba)\",\n");
+        prompt.append("    \"ostatnie zdanie (NIEZMIENIONE)\"\n");
+        prompt.append("  ],\n");
+        prompt.append("  \"rozmowa02\": [...],\n");
+        prompt.append("  ...\n");
+        prompt.append("}\n\n");
+
+        prompt.append("🚨 UWAGI KRYTYCZNE - WARUNKI ODRZUCENIA:\n");
+        prompt.append("❌ Jeśli nie spełnisz wymagań długości, rekonstrukcja będzie ODRZUCONA!\n");
+        prompt.append("❌ Jeśli jakiekolwiek zdanie wystąpi więcej niż raz, rekonstrukcja będzie ODRZUCONA!\n");
+        prompt.append("❌ Jeśli jakiekolwiek zdanie zostanie pominięte, rekonstrukcja będzie ODRZUCONA!\n");
+        prompt.append("❌ Jeśli zmienisz pierwsze lub ostatnie zdanie, rekonstrukcja będzie ODRZUCONA!\n");
+        prompt.append("❌ Jeśli znajdę JAKIKOLWIEK DUPLIKAT zdania, rekonstrukcja będzie ODRZUCONA!\n");
+        prompt.append("❌ Jeśli liczba zdań nie będzie się zgadzać, rekonstrukcja będzie ODRZUCONA!\n");
+        prompt.append("✅ TYLKO PERFEKCYJNA REKONSTRUKCJA BEZ DUPLIKATÓW ZOSTANIE ZAAKCEPTOWANA!\n\n");
+
+        prompt.append("🔍 FINALNA KONTROLA PRZED ODPOWIEDZIĄ:\n");
+        prompt.append("1. Policz wszystkie zdania w swojej rekonstrukcji\n");
+        prompt.append("2. Sprawdź każde zdanie czy nie występuje gdzie indziej\n");
+        prompt.append("3. Porównaj liczbę zdań z wymaganą liczbą\n");
+        prompt.append("4. Sprawdź długości wszystkich rozmów\n");
+        prompt.append("5. Sprawdź pierwsze i ostatnie zdania każdej rozmowy\n");
+        prompt.append("6. DOPIERO PO POZYTYWNYM SPRAWDZENIU WSZYSTKICH PUNKTÓW - ODPOWIEDZ!\n");
+
+        return prompt.toString();
+    }
+
+    /**
+     * Creates a prompt for analyzing reconstructed conversations to identify the
+     * liar for W05D01.
+     *
+     * @param conversations          Reconstructed conversations
+     * @param facts                  Available facts for verification
+     * @param knownCorrectPersonName Optional known correct person name from
+     *                               previous correct answers (can be null)
+     * @return Formatted prompt for conversation analysis
+     */
+    public String w05d01_createConversationAnalysisPrompt(List<Map<String, Object>> conversations,
+            Map<String, String> facts, String knownCorrectPersonName) {
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("ZADANIE: Przeanalizuj rozmowy telefoniczne aby zidentyfikować kto kłamie.\n\n");
+
+        // Add known correct person name information if available
+        if (knownCorrectPersonName != null && !knownCorrectPersonName.trim().isEmpty()) {
+            prompt.append("⚠️ WAŻNE: Na podstawie poprzednich analiz wiemy, że osoba o imieniu '")
+                    .append(knownCorrectPersonName.trim())
+                    .append("' jest powiązana z pierwszym pytaniem. Uwzględnij to w analizie i upewnij się, ")
+                    .append("że identyfikacja osób jest zgodna z tym ustaleniem.\n\n");
+        }
+
+        prompt.append("ZREKONSTRUOWANE ROZMOWY:\n");
+        for (Map<String, Object> conv : conversations) {
+            prompt.append(String.format("=== %s ===\n", conv.get("name")));
+            List<String> sentences = (List<String>) conv.get("sentences");
+            if (sentences != null) {
+                for (int i = 0; i < sentences.size(); i++) {
+                    prompt.append(String.format("%d. %s\n", i + 1, sentences.get(i)));
+                }
+            }
+            prompt.append("\n");
+        }
+
+        prompt.append("ZNANE FAKTY:\n");
+        for (Map.Entry<String, String> fact : facts.entrySet()) {
+            prompt.append(String.format("PLIK %s: %s\n", fact.getKey(), fact.getValue()));
+        }
+
+        prompt.append("\nINSTRUKCJE ANALIZY:\n");
+        prompt.append("1. Porównaj wypowiedzi w rozmowach ze znanymi faktami\n");
+        prompt.append("2. Zidentyfikuj sprzeczności między tym co ludzie mówią a faktami\n");
+        prompt.append("3. Określ kto kłamie na podstawie tych sprzeczności\n");
+        prompt.append("4. Zidentyfikuj kluczowe informacje: imiona, endpointy, hasła, relacje\n");
+        prompt.append(
+                "5. ⚠️ KONKRETNE IMIONA: Szukaj konkretnych imion osób w rozmowach i faktach, a NIE opisów zawodowych ('agentka' → znajdź prawdziwe imię)\n");
+        prompt.append(
+                "6. ⚠️ WAŻNE - ŁĄCZENIE OSÓB: Analizuj charakterystyki osób z rozmów (płeć, zawód, umiejętności, relacje) i dopasowuj je do osób z faktów:\n");
+        prompt.append(
+                "   - 'agentka' + kobieta + IT/programowanie → sprawdź czy w faktach jest kobieta programistka\n");
+        prompt.append(
+                "   - 'nauczyciel' + mężczyzna + angielski → sprawdź czy w faktach jest nauczyciel angielskiego\n");
+        prompt.append("   - Zwracaj zawsze konkretne imię z faktów, nie opisy zawodowe!\n");
+        if (knownCorrectPersonName != null && !knownCorrectPersonName.trim().isEmpty()) {
+            prompt.append("10. SZCZEGÓLNIE ZWRÓĆ UWAGĘ na osobę '").append(knownCorrectPersonName.trim())
+                    .append("' - jej wypowiedzi są kluczowe dla analizy, skłamał on podczas rozmowy\n");
+            prompt.append("11. Zwróć analizę w formacie JSON:\n");
+        } else {
+            prompt.append("10. Zwróć analizę w formacie JSON:\n");
+        }
+        prompt.append("{\n");
+        prompt.append(
+                "  \"liar\": \"" + (knownCorrectPersonName != null ? knownCorrectPersonName : "imie_klamcy") + "\",\n");
+        prompt.append("  \"truthful_people\": [\"imie1\", \"imie2\"],\n");
+        prompt.append("  \"key_facts\": {\n");
+        prompt.append("    \"endpoints\": [\"url1\", \"url2\"],\n");
+        prompt.append("    \"passwords\": [\"haslo1\"],\n");
+        prompt.append("    \"relationships\": {\"osoba\": \"przezwisko\"},\n");
+        prompt.append("    \"conversation_participants\": {\"rozmowa1\": [\"osoba1\", \"osoba2\"]}\n");
+        prompt.append("  },\n");
+        prompt.append("  \"reasoning\": \"wyjasnienie\"\n");
+        prompt.append("}\n");
+
+        return prompt.toString();
+    }
+
+    /**
+     * Creates a prompt for answering questions based on conversations and facts for
+     * W05D01.
+     *
+     * @param question      The question to answer
+     * @param conversations Reconstructed conversations
+     * @param facts         Available facts
+     * @return Formatted prompt for question answering
+     */
+    public String w05d01_createQuestionAnswerPrompt(String question,
+            List<Map<String, Object>> conversations, Map<String, String> facts) {
+
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("ZADANIE: Odpowiedz na pytanie na podstawie analizy rozmów telefonicznych.\n\n");
+
+        prompt.append("PYTANIE: ").append(question).append("\n\n");
+
+        prompt.append("ROZMOWY:\n");
+        for (Map<String, Object> conv : conversations) {
+            prompt.append(String.format("=== %s ===\n", conv.get("name")));
+            List<String> sentences = (List<String>) conv.get("sentences");
+            if (sentences != null) {
+                for (String sentence : sentences) {
+                    prompt.append("- ").append(sentence).append("\n");
+                }
+            }
+        }
+
+        prompt.append("\nFAKTY:\n");
+        for (Map.Entry<String, String> fact : facts.entrySet()) {
+            prompt.append(String.format("%s: %s\n", fact.getKey(), fact.getValue()));
+        }
+
+        prompt.append("\nINSTRUKCJE:\n");
+        prompt.append("1. Odpowiedz na pytanie podając TYLKO najważniejsze informacje\n");
+        prompt.append("2. Używaj minimalnej liczby słów - maksymalnie 5 słów\n");
+        prompt.append("3. Bez pełnych zdań, bez interpunkcji\n");
+        prompt.append("4. Dla imion: zwracaj tylko imię lub przezwisko - NIE opisy zawodowe!\n");
+        prompt.append(
+                "5. ⚠️ KONKRETNE IMIONA: Szukaj konkretnych imion osób (np. 'Barbara', 'Adam'), a NIE opisów typu 'agentka', 'nauczyciel', 'kasjerka'\n");
+        prompt.append("6. Dla URL: zwracaj kompletny URL\n");
+        prompt.append("7. Dla wielu imion: oddzielaj przecinkiem\n");
+        prompt.append("8. ⚠️ ŁĄCZENIE OSÓB: Analizuj charakterystyki osób i dopasowuj do faktów:\n");
+        prompt.append("   - 'agentka' + kobieta + IT → Barbara (frontend developer)\n");
+        prompt.append("   - 'nauczyciel' + angielski → Aleksander (nauczyciel angielskiego)\n");
+        prompt.append("   - Zwracaj konkretne imię z faktów!\n");
+        prompt.append("9. Opieraj odpowiedź na wynikach analizy i danych z rozmów\n");
+
+        return prompt.toString();
+    }
+
+    /**
+     * Creates a prompt for answering questions with feedback from previous
+     * incorrect attempts for W05D01.
+     *
+     * @param question         The question to answer
+     * @param questionId       The question ID
+     * @param conversations    Reconstructed conversations
+     * @param facts            Available facts
+     * @param incorrectHistory List of previous incorrect answers
+     * @return Formatted prompt for question answering with feedback
+     */
+    public String w05d01_createQuestionAnswerWithFeedbackPrompt(String question, String questionId,
+            List<Map<String, Object>> conversations, Map<String, String> facts,
+            List<Map<String, Object>> incorrectHistory) {
+
+        StringBuilder prompt = new StringBuilder();
+        prompt.append(
+                "ZADANIE: Odpowiedz na pytanie na podstawie analizy rozmów telefonicznych z UCZENIEM NA BŁĘDACH.\n\n");
+
+        prompt.append("PYTANIE: ").append(question).append("\n\n");
+
+        // Add incorrect answers history for learning
+        if (!incorrectHistory.isEmpty()) {
+            prompt.append("POPRZEDNIE NIEPRAWIDŁOWE PRÓBY (ucz się na tych błędach):\n");
+            for (Map<String, Object> incorrect : incorrectHistory) {
+                prompt.append(String.format("Próba %d: Odpowiedź='%s' -> Błąd: %s\n",
+                        incorrect.get("attempt_number"),
+                        incorrect.get("answer"),
+                        incorrect.get("error_message")));
+            }
+            prompt.append("NIE powtarzaj tych nieprawidłowych odpowiedzi!\n\n");
+        }
+
+        prompt.append("ROZMOWY:\n");
+        for (Map<String, Object> conv : conversations) {
+            prompt.append(String.format("=== %s ===\n", conv.get("name")));
+            List<String> sentences = (List<String>) conv.get("sentences");
+            if (sentences != null) {
+                for (String sentence : sentences) {
+                    prompt.append("- ").append(sentence).append("\n");
+                }
+            }
+        }
+
+        prompt.append("\nFAKTY:\n");
+        for (Map.Entry<String, String> fact : facts.entrySet()) {
+            prompt.append(String.format("%s: %s\n", fact.getKey(), fact.getValue()));
+        }
+
+        prompt.append("\nKRYTYCZNE INSTRUKCJE:\n");
+        prompt.append("1. UCZ SIĘ na poprzednich nieprawidłowych próbach - NIE powtarzaj ich\n");
+        prompt.append("2. Odpowiedz podając TYLKO najważniejsze informacje\n");
+        prompt.append("3. Używaj minimalnej liczby słów - maksymalnie 5 słów\n");
+        prompt.append("4. Bez pełnych zdań, bez interpunkcji\n");
+        prompt.append("5. Dla imion: zwracaj tylko imię lub przezwisko - NIE opisy zawodowe!\n");
+        prompt.append(
+                "6. ⚠️ KONKRETNE IMIONA: Szukaj konkretnych imion osób (np. 'Barbara', 'Adam'), a NIE opisów typu 'agentka', 'nauczyciel', 'kasjerka'\n");
+        prompt.append("7. Dla URL: zwracaj kompletny URL\n");
+        prompt.append("8. Dla wielu imion: oddzielaj przecinkiem\n");
+        prompt.append("9. ⚠️ ŁĄCZENIE OSÓB: Analizuj charakterystyki osób i dopasowuj do faktów:\n");
+        prompt.append("   - 'agentka' + kobieta + IT → Barbara (frontend developer)\n");
+        prompt.append("   - 'nauczyciel' + angielski → Aleksander (nauczyciel angielskiego)\n");
+        prompt.append("   - Zwracaj konkretne imię z faktów!\n");
+        prompt.append("10. Opieraj odpowiedź na wynikach analizy i danych z rozmów\n");
+        prompt.append("11. Myśl inaczej niż w poprzednich nieudanych próbach\n");
+
+        return prompt.toString();
+    }
+
+    /**
+     * Creates a prompt for extracting password from conversations for W05D01.
+     *
+     * @param conversations Reconstructed conversations
+     * @return Formatted prompt for password extraction
+     */
+    public String w05d01_createPasswordExtractionPrompt(List<Map<String, Object>> conversations) {
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("ZADANIE: Wyciągnij hasło z rozmów telefonicznych.\n\n");
+
+        prompt.append("ROZMOWY:\n");
+        for (Map<String, Object> conv : conversations) {
+            prompt.append(String.format("=== %s ===\n", conv.get("name")));
+            List<String> sentences = (List<String>) conv.get("sentences");
+            if (sentences != null) {
+                for (String sentence : sentences) {
+                    prompt.append("- ").append(sentence).append("\n");
+                }
+            }
+            prompt.append("\n");
+        }
+
+        prompt.append("INSTRUKCJE:\n");
+        prompt.append("1. Znajdź hasło/password w rozmowach\n");
+        prompt.append("2. Hasło może być podane wprost lub zakodowane\n");
+        prompt.append("3. Szukaj słów kluczowych: 'hasło', 'password', 'kod dostępu'\n");
+        prompt.append("4. Zwróć TYLKO samo hasło, bez dodatkowego tekstu\n");
+        prompt.append("5. Jeśli nie znajdziesz hasła, zwróć 'BRAK'\n");
+        prompt.append("6. Hasło może być kombinacją liter i cyfr\n");
+        prompt.append("7. Może być podane w kontekście dostępu do API lub systemu\n\n");
+
+        prompt.append("ODPOWIEDŹ (tylko hasło):\n");
+
         return prompt.toString();
     }
 }

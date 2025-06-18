@@ -59,7 +59,7 @@ public class OpenAiAdapter {
             throw new IllegalArgumentException("Error: Prompt is empty.");
         }
 
-        logger.info("Sending prompt to OpenAI API (model: {}): \"{}\"", modelName, prompt);
+        // logger.info("Sending prompt to OpenAI API (model: {}): \"{}\"", modelName, prompt);
 
         try {
             ChatMessage userMessage = new ChatMessage(USER.value(), prompt);
@@ -74,7 +74,7 @@ public class OpenAiAdapter {
 
             if (choices != null && !choices.isEmpty() && choices.get(0).getMessage() != null) {
                 String answer = choices.get(0).getMessage().getContent();
-                logger.info("Received response from OpenAI: {}", answer);
+                // logger.info("Received response from OpenAI: {}", answer);
                 return answer;
             } else {
                 logger.warn("Received empty or incomplete response from OpenAI.");
