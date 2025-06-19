@@ -1041,4 +1041,132 @@ public class PromptService {
 
         return prompt.toString();
     }
+
+    /**
+     * Creates a comprehensive prompt for GPS tracking agent that analyzes logs and question data.
+     *
+     * @param agentLogs Agent logs to analyze
+     * @param questionData Question data from centrala
+     * @return Formatted prompt for GPS agent
+     */
+    public String w05d02_createGpsAgentPrompt(String agentLogs, String questionData) {
+        return """
+                JESTEŚ INTELIGENTNYM AGENTEM GPS do śledzenia lokalizacji osób.
+                
+                ZADANIE: Przeanalizuj logi niedziałającego agenta i dane pytania, następnie stwórz plan rozwiązania problemu.
+                
+                ===== LOGI AGENTA =====
+                """ + agentLogs + """
+                
+                ===== DANE PYTANIA =====
+                """ + questionData + """
+                
+                ===== DOSTĘPNE NARZĘDZIA =====
+                1. PEOPLE_API - sprawdza w jakich miejscach była widziana dana osoba
+                2. PLACES_API - sprawdza jakie osoby były widziane w danym miejscu  
+                3. DB_DISCOVER_TABLES - odkrywa nazwy tabel w bazie danych
+                4. DB_DISCOVER_TABLE_SCHEMAS - pobiera schematy tabel
+                5. DB_EXECUTE_SQL - wykonuje zapytania SQL w bazie danych
+                6. GPS_API - pobiera współrzędne GPS dla konkretnego userID
+                
+                ===== TWOJE ZADANIA =====
+                
+                1. ANALIZA LOGÓW:
+                   - Przeanalizuj co robił poprzedni agent
+                   - Zidentyfikuj jego cel i metodę działania
+                   - Wyciągnij wnioski o strukturze danych i API
+                
+                2. ANALIZA PYTANIA:
+                   - Zidentyfikuj jakie osoby mają być śledzone
+                   - Zrozum co jest wymagane jako odpowiedź
+                   - Określ format oczekiwanej odpowiedzi
+                
+                3. STWORZENIE PLANU:
+                   - Określ kolejne kroki do rozwiązania problemu
+                   - Wskaż które narzędzia użyć w każdym kroku
+                   - Przygotuj strategię na wypadek błędów
+                
+                ===== WAŻNE ZASADY =====
+                - Nie uwzględniaj BARBARY w wynikach (zostanie odfiltrowana)
+                - Imiona muszą być bez polskich znaków (RAFAŁ -> RAFAL)
+                - API zwraca miejsca jako pojedyncze słowa oddzielone spacjami
+                - Baza danych może mieć różne struktury tabel
+                - Współrzędne mogą być w polach: lat/lon, latitude/longitude
+                
+                ===== FORMAT ODPOWIEDZI =====
+                ANALIZA LOGÓW:
+                [Twoja analiza logów agenta]
+                
+                ANALIZA PYTANIA:
+                [Twoja analiza pytania]
+                
+                OSOBY DO ŚLEDZENIA:
+                - [Imię Nazwisko]
+                - [Imię Nazwisko]
+                
+                PLAN DZIAŁANIA:
+                Krok 1: [Opis kroku] - Narzędzie: NAZWA_NARZĘDZIA:PARAMETR
+                Krok 2: [Opis kroku] - Narzędzie: NAZWA_NARZĘDZIA:PARAMETR
+                [...]
+                
+                ===== PARAMETRY NARZĘDZI =====
+                - PLACES_API:NAZWA_MIEJSCA (np. PLACES_API:LUBAWA)
+                - PEOPLE_API:IMIĘ_OSOBY (np. PEOPLE_API:RAFAL)
+                - GPS_API:USER_ID (np. GPS_API:123)
+                - DB_EXECUTE_SQL:ZAPYTANIE_SQL
+                - DB_DISCOVER_TABLES (bez parametrów)
+                - DB_DISCOVER_TABLE_SCHEMAS (bez parametrów)
+                - MANUAL:OPIS (dla kroków logicznych bez API)
+                
+                ===== WAŻNE ZASADY FORMATOWANIA =====
+                - NIE używaj nawiasów kwadratowych [] wokół narzędzi
+                - Format: "Narzędzie: NAZWA_NARZĘDZIA:PARAMETR"
+                - Każdy krok MUSI mieć określone narzędzie
+                - Dla kroków logicznych użyj MANUAL:OPIS
+                
+                                 STRATEGIA ROZWIĄZANIA:
+                 [Opisz jak połączyć wyniki z różnych API aby uzyskać końcowy rezultat]
+                 """;
+    }
+
+    /**
+     * Creates a prompt for generating SQL queries to find coordinates for a specific place.
+     *
+     * @param place The place name to search for
+     * @param tables List of available database tables
+     * @param schemas Database table schemas
+     * @return Formatted prompt for SQL query generation
+     */
+    public String w05d02_createDatabaseQueryPrompt(String place, List<String> tables, String schemas) {
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("JESTEŚ EKSPERTEM SQL generującym zapytania do bazy danych GPS.\n\n");
+        prompt.append("ZADANIE: Wygeneruj zapytania SQL aby znaleźć współrzędne geograficzne dla miejsca: ").append(place).append("\n\n");
+        prompt.append("===== DOSTĘPNE TABELE =====\n");
+        prompt.append(String.join(", ", tables)).append("\n\n");
+        prompt.append("===== SCHEMATY TABEL =====\n");
+        prompt.append(schemas).append("\n\n");
+        prompt.append("===== INSTRUKCJE =====\n");
+        prompt.append("1. Przeanalizuj schematy tabel aby zrozumieć strukturę danych\n");
+        prompt.append("2. Zidentyfikuj tabele i kolumny zawierające:\n");
+        prompt.append("   - Nazwy miejsc/lokalizacji\n");
+        prompt.append("   - Współrzędne geograficzne (lat/lon, latitude/longitude, GPS coordinates)\n");
+        prompt.append("3. Wygeneruj różne warianty zapytań SQL do znalezienia współrzędnych\n");
+        prompt.append("4. Uwzględnij różne możliwe nazwy kolumn i formatów danych\n");
+        prompt.append("5. Użyj LIKE i innych operatorów jeśli nazwa może być częścią większego tekstu\n\n");
+        prompt.append("===== WAŻNE ZASADY =====\n");
+        prompt.append("- Szukaj miejsca: ").append(place).append("\n");
+        prompt.append("- Uwzględnij różne przypadki pisowni (UPPER, lower, Mixed)\n");
+        prompt.append("- Spróbuj różnych nazw kolumn (name, city, location, place, etc.)\n");
+        prompt.append("- Spróbuj różnych nazw pól współrzędnych (lat/lon, latitude/longitude, x/y, gps_lat/gps_lon)\n");
+        prompt.append("- Zwróć tylko wykonywalne zapytania SQL\n");
+        prompt.append("- Każde zapytanie w osobnej linii\n");
+        prompt.append("- Najpierw najlepsze/najbardziej prawdopodobne zapytania\n\n");
+        prompt.append("===== FORMAT ODPOWIEDZI =====\n");
+        prompt.append("Zwróć TYLKO zapytania SQL, po jednym w linii:\n\n");
+        prompt.append("SELECT lat, lon FROM tabela WHERE kolumna = '").append(place).append("'\n");
+        prompt.append("SELECT latitude, longitude FROM tabela WHERE kolumna LIKE '%").append(place).append("%'\n");
+        prompt.append("[więcej zapytań...]\n");
+        
+        return prompt.toString();
+    }
 }
