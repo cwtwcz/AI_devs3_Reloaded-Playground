@@ -98,19 +98,31 @@ public class OpenAiAdapter {
             requestDto.setModel(modelName);
 
             HttpEntity<OpenAiImagePromptRequestDto> entity = new HttpEntity<>(requestDto, headers);
+            
+            logger.info("Sending vision request to OpenAI with model: {}", modelName);
 
             ResponseEntity<OpenAiVisionResponseDto> response = restTemplate.postForEntity(
                     openAiChatCompletionsUrl, entity, OpenAiVisionResponseDto.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                OpenAiVisionResponseDto.Message message = response.getBody().getChoices().get(0).getMessage();
-                if (message != null && message.getContent() != null) {
-                    String content = message.getContent();
-                    logger.info("Received vision response from OpenAI: {}", content);
-                    return content.trim();
+                OpenAiVisionResponseDto responseBody = response.getBody();
+                logger.info("Received successful response from OpenAI Vision API");
+                
+                if (responseBody.getChoices() != null && !responseBody.getChoices().isEmpty()) {
+                    OpenAiVisionResponseDto.Message message = responseBody.getChoices().get(0).getMessage();
+                    if (message != null && message.getContent() != null) {
+                        String content = message.getContent();
+                        logger.info("Received vision response from OpenAI: {}", content);
+                        return content.trim();
+                    } else {
+                        logger.error("Message or content is null in OpenAI response");
+                    }
+                } else {
+                    logger.error("No choices in OpenAI response");
                 }
             }
-            logger.error("OpenAI vision API call failed: {}", response.getBody());
+            logger.error("OpenAI vision API call failed: status={}, body={}", 
+                       response.getStatusCode(), response.getBody());
             return "Error: Communication issues with LLM (vision, HTTP: " + response.getStatusCode() + ")";
         } catch (Exception e) {
             logger.error("Error during OpenAI vision API call: {}", e.getMessage(), e);

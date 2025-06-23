@@ -163,4 +163,77 @@ public class DatabaseQueryService {
     public String insertIncorrectPhoneAnswer() {
         return "INSERT INTO phone_answers (question_id, answer, is_correct) VALUES (?, ?, 0)";
     }
+
+    // Story answers queries for W05D05
+
+    /**
+     * Tworzy tabelę do przechowywania odpowiedzi na pytania story
+     */
+    public String createStoryAnswersTable() {
+        return """
+            CREATE TABLE IF NOT EXISTS story_answers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                question_index INTEGER NOT NULL,
+                answer TEXT NOT NULL,
+                is_correct BOOLEAN DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """;
+    }
+
+    /**
+     * Zapytanie do pobrania poprawnej odpowiedzi z story_answers
+     */
+    public String selectCorrectStoryAnswer() {
+        return "SELECT answer FROM story_answers WHERE question_index = ? AND is_correct = 1";
+    }
+
+    /**
+     * Zapytanie do pobrania niepoprawnych odpowiedzi z story_answers
+     */
+    public String selectIncorrectStoryAnswers() {
+        return "SELECT answer FROM story_answers WHERE question_index = ? AND is_correct = 0 ORDER BY created_at DESC";
+    }
+
+    /**
+     * Zapytanie do wstawienia lub aktualizacji poprawnej odpowiedzi w story_answers
+     */
+    public String insertOrReplaceCorrectStoryAnswer() {
+        return "INSERT OR REPLACE INTO story_answers (question_index, answer, is_correct) VALUES (?, ?, 1)";
+    }
+
+    /**
+     * Zapytanie do wstawienia niepoprawnej odpowiedzi w story_answers
+     */
+    public String insertIncorrectStoryAnswer() {
+        return "INSERT INTO story_answers (question_index, answer, is_correct) VALUES (?, ?, 0)";
+    }
+
+    /**
+     * Zapytanie do sprawdzenia czy odpowiedź już istnieje jako poprawna w story_answers
+     */
+    public String selectCorrectStoryAnswerExists() {
+        return "SELECT is_correct FROM story_answers WHERE question_index = ? AND is_correct = 1";
+    }
+
+    /**
+     * Zapytanie do usunięcia niepoprawnych odpowiedzi po znalezieniu poprawnej
+     */
+    public String deleteIncorrectStoryAnswers() {
+        return "DELETE FROM story_answers WHERE question_index = ? AND is_correct = 0";
+    }
+
+    /**
+     * Zapytanie do zliczenia poprawnych odpowiedzi story
+     */
+    public String countCorrectStoryAnswers() {
+        return "SELECT COUNT(DISTINCT question_index) FROM story_answers WHERE is_correct = 1";
+    }
+
+    /**
+     * Zapytanie do zliczenia niepoprawnych odpowiedzi story
+     */
+    public String countIncorrectStoryAnswers() {
+        return "SELECT COUNT(*) FROM story_answers WHERE is_correct = 0";
+    }
 } 
